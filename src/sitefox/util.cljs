@@ -27,8 +27,8 @@
       first
       (.replace "T" " ")))
 
-(defn bail [msg]
-  (js/console.error msg)
+(defn bail [& msgs]
+  (apply js/console.error msgs)
   (js/console.error "Server exit.")
   (js/process.exit 1))
 
@@ -37,6 +37,9 @@
 
 (defn env [k & [default]]
   (or (aget js/process.env k) default))
+
+(defn env-required [k]
+  (or (env k) (bail "Required environment variable is missing:" k)))
 
 (defn error-to-json [err]
   (let [e (js/JSON.parse (js/JSON.stringify err))]
