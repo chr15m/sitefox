@@ -1,1 +1,1 @@
-Node + cljs backend framework. WIP.
+Node + cljs backend web framework. WIP.
