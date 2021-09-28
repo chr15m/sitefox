@@ -1,5 +1,5 @@
 (defproject chr15m/sitefox "0.0.1"
-  :description "Node backends"
+  :description "Node + cljs backend framework"
   :url "https://github.com/chr15m/sitefox"
 
   :dependencies
