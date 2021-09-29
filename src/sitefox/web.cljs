@@ -18,8 +18,9 @@
 (defn create-store [kv]
   (let [e (session/Store.)]
     (aset e "destroy" (fn [sid callback]
-                        (go (<p! (j/call kv :destroy sid))
-                            (callback))))
+                        (go (<p! (j/call kv :delete sid))
+                            (when callback
+                              (callback)))))
     (aset e "get" (fn [sid callback]
                     (go (callback
                           nil
