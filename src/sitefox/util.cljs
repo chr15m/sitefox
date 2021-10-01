@@ -30,17 +30,17 @@
         (.end error-log))
       (cb))))
 
+(defn bail [& msgs]
+  (apply js/console.error msgs)
+  (js/console.error "Server exit.")
+  (flush-bound-console #(js/process.exit 1)))
+
 (defn now []
   (-> (js/Date.)
       (.toISOString)
       (.split ".")
       first
       (.replace "T" " ")))
-
-(defn bail [& msgs]
-  (apply js/console.error msgs)
-  (js/console.error "Server exit.")
-  (flush-bound-console #(js/process.exit 1)))
 
 (defn log [file-path & args]
   (apply print (conj (conj args (str (basename file-path) ":")) (now))))
