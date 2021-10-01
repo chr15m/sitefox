@@ -1,7 +1,6 @@
 (ns sitefox.util
   (:require
-    ["caller-id" :as caller-id]
-    ["chokidar" :as file-watcher]))
+    [sitefox.logging :refer [bail]]))
 
 (defn env [k & [default]]
   (or (aget js/process.env k) default))
@@ -16,16 +15,3 @@
 
 (defn btoa [s]
   (-> s js/Buffer. (.toString "base64")))
-
-(defn reloader [reload-function]
-  (let [caller (.getData caller-id)
-        caller-path (aget caller "filePath")]
-    (->
-      (.watch file-watcher caller-path)
-      (.on "change"
-           (fn [path]
-             (js/console.error (str "Reload triggered by " path))
-             (js/setTimeout
-               reload-function
-               500))))))
-
