@@ -9,6 +9,7 @@
     "keyv": "^4.0.3",
     "minimal-stylesheet": "^0.1.0",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.6.5",
     "rotating-file-stream": "^2.1.6",
     "shadow-cljs": "^2.15.9",
     "source-map-support": "^0.5.20",
