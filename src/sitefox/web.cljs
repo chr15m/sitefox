@@ -90,3 +90,20 @@
     (->
       (serve app)
       (.then (fn [host port] [app host port])))))
+
+(defn build-absolute-uri [req path]
+  (let [hostname (aget req "hostname")
+        host (aget req "headers" "host")]
+    (str (aget req "protocol") "://"
+         (if (not= hostname "localhost") hostname host)
+         (if (not= (aget path 0) "/") "/")
+         path)))
+
+(defn strip-slash-redirect [req res n]
+  (let [path (aget req "path")
+        url (aget req "url")]
+    (if (and
+          (= (last path) "/")
+          (> (aget path "length") 1))
+      (.redirect res 301 (str (.slice path 0 -1) (.slice url (aget path "length"))))
+      (n))))
