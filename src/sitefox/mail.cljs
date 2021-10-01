@@ -4,7 +4,7 @@
     [sitefox.util :refer [env]]
     ["nodemailer" :as nm]))
 
-(defn create []
+(defn transport []
   (let [smtp-url (env "SMTP_SERVER" nil)]
     (if smtp-url
       (js/Promise. (fn [res err] (res (.createTransport nm smtp-url))))
@@ -18,9 +18,10 @@
                           :auth #js {:user (aget account "user")
                                      :pass (aget account "pass")}})))))))
 
-(defn send-mail [mail-transport to from subject html text unsubscribe-url]
+(defn send-mail [mail-transport to from subject html text]
   ; main().catch(console.error);
   (->
+    ; TODO: headers
     (j/call
       mail-transport
       :sendMail
@@ -28,8 +29,7 @@
                 :to to
                 :subject subject
                 :text text
-                :html html
-                :list {:unsubscribe {:url unsubscribe-url}}}))
+                :html html}))
     (.catch (fn [err] #js {:error err}))
     (.then (fn [info]
              (aset info "url" (.getTestMessageUrl nm info))
