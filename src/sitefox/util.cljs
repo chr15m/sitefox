@@ -8,17 +8,27 @@
 
 (defn bind-console-log-to-file []
   (let [logs (str js/__dirname "/logs")
-        error-log (.createStream rfs "error.log" #js {:interval "7d" :path logs})
-        stdout (aget js/process "stdout")
+        error-log (.createStream rfs "error.log" (clj->js {:interval "7d" :path logs :teeToStdout true}))
         log-fn (fn [& args]
                  (let [date (.toISOString (js/Date.))
                        [d t] (.split date "T")
                        [t _] (.split t ".")
                        out (str d " " t " " (apply util/format (clj->js args)) "\n")]
-                   (.write error-log out)
-                   (.write stdout out)))]
+                   (.write error-log out)))]
     (aset js/console "log" log-fn)
-    (aset js/console "error" log-fn)))
+    (aset js/console "error" log-fn)
+    (aset js/console "_logstream" error-log)
+    log-fn))
+
+(defn flush-bound-console [cb]
+  (let [error-log (aget js/console "_logstream")]
+    (if error-log
+      (do
+        (.on error-log "finish" cb)
+        (aset js/console "log" (fn []))
+        (aset js/console "error" (fn []))
+        (.end error-log))
+      (cb))))
 
 (defn now []
   (-> (js/Date.)
@@ -30,7 +40,7 @@
 (defn bail [& msgs]
   (apply js/console.error msgs)
   (js/console.error "Server exit.")
-  (js/process.exit 1))
+  (flush-bound-console #(js/process.exit 1)))
 
 (defn log [file-path & args]
   (apply print (conj (conj args (str (basename file-path) ":")) (now))))
