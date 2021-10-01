@@ -2,6 +2,7 @@
   (:require
     ["path" :refer [basename]]
     ["util" :as util]
+    [applied-science.js-interop :as j]
     ["caller-id" :as caller-id]
     ["chokidar" :as file-watcher]
     ["rotating-file-stream" :as rfs]))
@@ -24,7 +25,7 @@
   (let [error-log (aget js/console "_logstream")]
     (if error-log
       (do
-        (.on error-log "finish" cb)
+        (j/call error-log :on "finish" cb)
         (aset js/console "log" (fn []))
         (aset js/console "error" (fn []))
         (.end error-log))
