@@ -18,5 +18,8 @@
   },  
   "devDependencies": {
     "nbb": "0.0.76"
+  },
+  "scripts": {
+    "sync-deps": "nbb bin/sync-deps.clj"
   }
 }
