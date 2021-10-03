@@ -65,10 +65,10 @@
   app)
 
 (defn reset-routes [app]
-  (let [router app._router]
+  (let [router (aget app "_router")]
     (when router
-      (js/console.error (str "Deleting " (aget app "_router" "stack" "length") " routes"))
-      (set! app._router nil))
+      (js/console.error (str "Deleting " (aget router "stack" "length") " routes"))
+      (aset app "_router" nil))
     (add-default-middleware app)))
 
 (defn create []
