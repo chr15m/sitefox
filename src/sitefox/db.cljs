@@ -1,7 +1,7 @@
 (ns sitefox.db
   (:require
     [sitefox.util :refer [env]]
-    ["keyv" :as Keyv]))
+    ["keyv$default" :as Keyv]))
 
 (def database-url (env "DATABASE" "sqlite://./database.sqlite"))
 

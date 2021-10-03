@@ -6,12 +6,12 @@
     [applied-science.js-interop :as j]
     ["path" :as path]
     ["process" :as process]
-    ["express" :as express]
-    ["cookie-parser" :as cookies]
-    ["body-parser" :as body-parser]
+    ["express$default" :as express]
+    ["cookie-parser$default" :as cookies]
+    ["body-parser$default" :as body-parser]
     ["serve-static" :as serve-static]
-    ["express-session" :as session]
-    ["morgan" :as morgan]
+    ["express-session$default" :as session]
+    ["morgan$default" :as morgan]
     ["rotating-file-stream" :as rfs]))
 
 (def dir (or js/__dirname "./"))
