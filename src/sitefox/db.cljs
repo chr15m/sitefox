@@ -6,7 +6,7 @@
 (def database-url (env "DATABASE" "sqlite://./database.sqlite"))
 
 (defn kv [kv-ns]
-  (Keyv. database-url #js {:namespace kv-ns}))
+  (Keyv. database-url (clj->js {:namespace kv-ns})))
 
 (defn client []
   (->
