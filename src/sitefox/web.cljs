@@ -15,6 +15,8 @@
     [cljs.core.async :refer (go <!) :as async]
     [cljs.core.async.interop :refer-macros [<p!]]))
 
+(def dir (or js/__dirname "./"))
+
 (defn create-store [kv]
   (let [e (session/Store.)]
     (aset e "destroy" (fn [sid callback]
@@ -38,7 +40,7 @@
 
 (defn add-default-middleware [app]
   ; set up logging
-  (let [logs (str js/__dirname "/logs")
+  (let [logs (path/join dir "/logs")
         access-log (.createStream rfs "access.log" #js {:interval "7d" :path logs})
         kv-session (db/kv "session")
         store (create-store kv-session)]
@@ -61,7 +63,7 @@
   app)
 
 (defn static-folder [app route folder]
-  (.use app route (serve-static (path/join js/__dirname folder)))
+  (.use app route (serve-static (path/join dir folder)))
   app)
 
 (defn reset-routes [app]
