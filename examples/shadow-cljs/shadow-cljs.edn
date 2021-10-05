@@ -1,0 +1,27 @@
+{:source-paths ["src" "../../src"]
+ :dependencies [[reagent "1.1.0"]
+                [funcool/promesa "6.0.2"]
+                [applied-science/js-interop "0.2.7"]
+                ]
+ ; :deps true
+ :builds {:server {:target :node-script
+                   :output-to "devserver.js"
+                   :main shadowtest.server/main!
+                :modules {; :common {:entries []}
+                          :server {:init-fn shadowtest.server/main!
+                                 ;:depends-on #{:common}
+                                 }
+                          ;:admin {:init-fn twentiments.admin/main!
+                          ;        :depends-on #{:common}}
+                          ;:read {:init-fn twentiments.read/main!
+                          ;         :depends-on #{:common}}
+                          
+                          }
+
+                   :release {:output-to "server.js"
+                             :output-dir "build"
+                             ; :compiler-options {:optimizations :simple
+                             ;                   :output-feature-set :es6}
+                             ;:compiler-options {:output-feature-set :es6}
+                             }
+                   :devtools {:after-load shadowtest.server/reload!}}}}
