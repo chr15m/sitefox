@@ -7,19 +7,21 @@
  :builds {:server {:target :esm
                    :output-to "devserver.js"
                    :main shadowtest.server/main!
-                :modules {; :common {:entries []}
-                          :server {:init-fn shadowtest.server/main!
-                                 ;:depends-on #{:common}
-                                 }
-                          ;:admin {:init-fn twentiments.admin/main!
-                          ;        :depends-on #{:common}}
-                          ;:read {:init-fn twentiments.read/main!
-                          ;         :depends-on #{:common}}
-                          
-                          }
+                   :js-options {:keep-as-import #{"fs" "fsevents"}}
+                   :modules {; :common {:entries []}
+                             :server {:init-fn shadowtest.server/main!
+                                      ;:depends-on #{:common}
+                                      }
+                             ;:admin {:init-fn twentiments.admin/main!
+                             ;        :depends-on #{:common}}
+                             ;:read {:init-fn twentiments.read/main!
+                             ;         :depends-on #{:common}}
+
+                             }
 
                    :release {:output-to "server.mjs"
                              :output-dir "build"
+                             ;:compiler-options {:optimizations :whitespace}
                              ; :compiler-options {:optimizations :simple
                              ;                   :output-feature-set :es6}
                              ;:compiler-options {:output-feature-set :es6}
