@@ -4,7 +4,7 @@
                 [applied-science/js-interop "0.2.7"]
                 ]
  ; :deps true
- :builds {:server {:target :node-script
+ :builds {:server {:target :esm
                    :output-to "devserver.js"
                    :main shadowtest.server/main!
                 :modules {; :common {:entries []}
@@ -18,7 +18,7 @@
                           
                           }
 
-                   :release {:output-to "server.js"
+                   :release {:output-to "server.mjs"
                              :output-dir "build"
                              ; :compiler-options {:optimizations :simple
                              ;                   :output-feature-set :es6}
