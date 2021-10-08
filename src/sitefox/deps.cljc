@@ -1,5 +1,6 @@
 (ns sitefox.deps
   (:require
+    ["express-session" :refer [Store]]
     #?(:org.babashka/nbb
         ["express$default" :as r-express]
         :cljs
@@ -16,10 +17,6 @@
         ["express-session$default" :as r-session]
         :cljs
         ["express-session" :as r-session])
-    #?(:org.babashka/nbb
-        ["express-session" :refer [Store]]
-        :cljs
-        ["express-session" :refer [Store]])
     #?(:org.babashka/nbb
         ["morgan$default" :as r-morgan]  
         :cljs
