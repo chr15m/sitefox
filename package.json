@@ -15,9 +15,9 @@
     "source-map-support": "^0.5.20",
     "sqlite3": "^5.0.2",
     "ws": "^8.2.2"
-  },  
+  },
   "devDependencies": {
-    "nbb": "0.0.76"
+    "nbb": "0.0.97"
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.clj",
