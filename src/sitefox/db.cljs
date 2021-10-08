@@ -7,7 +7,7 @@
   `DATABASE_URL` for Postgres: `postgresql://[user[:password]@][netloc][:port][,...][/dbname][?param1=value1&...]`"
   (:require
     [sitefox.util :refer [env]]
-    ["keyv$default" :as Keyv]))
+    [sitefox.deps :refer [Keyv]]))
 
 (def database-url (env "DATABASE_URL" "sqlite://./database.sqlite"))
 

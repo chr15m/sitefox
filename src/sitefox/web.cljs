@@ -7,18 +7,14 @@
     [applied-science.js-interop :as j]
     ["path" :as path]
     ["process" :as process]
-    ["express$default" :as express]
-    ["cookie-parser$default" :as cookies]
-    ["body-parser$default" :as body-parser]
     ["serve-static" :as serve-static]
-    ["express-session$default" :as session]
-    ["morgan$default" :as morgan]
-    ["rotating-file-stream" :as rfs]))
+    ["rotating-file-stream" :as rfs]
+    [sitefox.deps :refer [express cookies body-parser session session-store morgan]]))
 
 (def ^:no-doc server-dir (or js/__dirname "./"))
 
 (defn ^:no-doc create-store [kv]
-  (let [e (session/Store.)]
+  (let [e (session-store.)]
     (aset e "destroy" (fn [sid callback]
                         (p/let [result (j/call kv :delete sid)]
                           (when callback (callback))
