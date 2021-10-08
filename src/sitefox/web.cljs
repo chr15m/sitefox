@@ -9,12 +9,13 @@
     ["process" :as process]
     ["serve-static" :as serve-static]
     ["rotating-file-stream" :as rfs]
-    [sitefox.deps :refer [express cookies body-parser session session-store morgan]]))
+    ["express-session" :refer [Store]]
+    [sitefox.deps :refer [express cookies body-parser session morgan]]))
 
 (def ^:no-doc server-dir (or js/__dirname "./"))
 
 (defn ^:no-doc create-store [kv]
-  (let [e (session-store.)]
+  (let [e (Store.)]
     (aset e "destroy" (fn [sid callback]
                         (p/let [result (j/call kv :delete sid)]
                           (when callback (callback))
