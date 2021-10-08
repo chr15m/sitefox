@@ -1,0 +1,5 @@
+build
+.shadow-cljs
+database.sqlite
+logs
+server.js
