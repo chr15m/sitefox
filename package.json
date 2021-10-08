@@ -21,6 +21,6 @@
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.clj",
-    "docs": "clojure -X:codox"
+    "docs": "( echo '# Readme'; cat README.md ) > codox-readme.md && clojure -X:codox"
   }
 }

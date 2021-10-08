@@ -1,0 +1,14 @@
+{:paths ["src"]
+ :deps {thheller/shadow-cljs {:mvn/version "2.15.3"}
+        funcool/promesa {:mvn/version "6.0.2"}
+        applied-science/js-interop {:mvn/version "0.2.7"}}
+ :aliases {:codox {:extra-deps {codox/codox {:mvn/version "0.10.7"}}
+                   :exec-fn codox.main/generate-docs
+                   :exec-args {:source-paths  ["src"]
+                               :name "Sitefox"
+                               :source-uri "https://github.com/chr15m/sitefox/blob/master/{filepath}#L{line}"
+                               :metadata {:doc/format :markdown}
+                               :output-path "docs"
+                               :reader :clojurescript
+                               :language :clojurescript
+                               :doc-files ["codox-readme.md"]}}}}
