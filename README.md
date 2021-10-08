@@ -15,7 +15,7 @@ Battle tested on real sites.
 ## Batteries included
 
  * [Routing (express)](#web-server-routes)
- * [Sessions](#sessions)
+ * [Sessions + authentication](#sessions)
  * [Templates](#templates)
  * [Database + Key-value store](#database)
  * [Email](#email)
@@ -84,7 +84,7 @@ More [Sitefox examples here](./examples).
 Sitefox uses the `express` web server with sensible defaults for sessions and logging.
 Create a new server with `web/start` and set up a route which responds with "Hello world!" as follows:
 
-```
+```clojure
 (-> (web/start)
   (.then (fn [app host port]
     (.get app "/myroute"
@@ -96,7 +96,7 @@ Sitefox comes with an optional system to reload routes when the server is change
 Your express routes will be reloaded every time your server code is refreshed (e.g. by a shadow-cljs build).
 In this example the function `setup-routes` will be called when a rebuild occurs.
 
-```
+```clojure
 (defn setup-routes [app]
   ; flush all routes from express
   (web/reset-routes app)
@@ -110,17 +110,57 @@ In this example the function `setup-routes` will be called when a rebuild occurs
 I recommend the [promesa](https://github.com/funcool/promesa) library for managing promise control flow.
 This example assumes require `[promesa.core :as p]`:
 
-```
+```clojure
 (p/let [[app host port] (web/start)]
-  ; now do something with app
+  ; now use express `app` to set up routes and middleware
   )
 ```
 
 ### Database
 
-TBD.
+Sitefox makes it easy to start storing key-value data with no configuration.
+You can then transition to more structured data later if you need.
+It bundles [Keyv](https://github.com/lukechilds/keyv) which is a database backed key-value store.
 
-### Sessions
+By default a local sqlite database is used so you can start persisting data on the server immediately without any configuration.
+Once you move to production you can configure another database using the environment variable `DATABASE_URL`.
+For example, to use a postgres database called "somedatabase": `DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase`.
+Or simply `postgres:///somedatabase` if your user has local access on the deploy server.
+
+Use the database and key-value interface as follows.
+
+Require `kv` from the database module:
+
+```clojure
+[sitefox.db :as db]
+```
+
+Now you can use `db/kv` to write a key-value to a namespaced "table":
+
+```clojure
+(let [table (db/kv "sometable")]
+  (.set table "key" "42"))
+```
+
+Retrieve the value again:
+
+```clojure
+(-> (.get table "key)
+  (.then (fn [val] (print val))))
+```
+
+You can use `db/client` to access the underlying database connection.
+For example to make a query against the configured database:
+
+```clojure
+(let [c (db/client)]
+  (-> (.query db "select * from sometable WHERE x = 1")
+    (.then (fn [rows] (print rows)))))
+```
+
+Again, [promesa](https://github.com/funcool/promesa) is recommended for managing control flow during database operations.
+
+### Sessions + authentication
 
 TBD.
 
