@@ -14,8 +14,9 @@ Battle tested on real sites.
 
 ## Batteries included
 
- * [Routing (express)](#web-server-routes)
- * [Sessions + authentication](#sessions)
+ * [Routing](#web-server-routes)
+ * [Sessions](#sessions)
+ * [Authentication](#authentication)
  * [Templates](#templates)
  * [Database + Key-value store](#database)
  * [Email](#email)
@@ -164,7 +165,7 @@ For example to make a query against the configured database:
 
 Again, [promesa](https://github.com/funcool/promesa) is recommended for managing control flow during database operations.
 
-### Sessions + authentication
+### Sessions
 
 Sessions are enabled by default and each visitor to your server will have their own session.
 The session data is persisted server side across page loads so you can use it to store authentication status for example.
@@ -184,11 +185,38 @@ To read a value from the session store:
 (aget req "session" "myvalue")
 ```
 
-Authentication: coming soon.
+### Authentication
+
+TBD.
 
 ### Templates
 
-TBD.
+Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.
+
+```clojure
+[sitefox.html :refer [render-into]]
+```
+
+You can load an HTML document and render Reagent forms into a selected element:
+
+```clojure
+(def index-html (fs/readFileSync "index.html"))
+
+(defn component-main []
+  [:div
+   [:h1 "Hello world!"]
+   [:p "This is my content."]])
+
+; this returns a new HTML string that can be returned
+; e.g. with (.send res)
+(render-into index-html "main" [component-main])
+```
+
+Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) and offers shortcuts for working with HTML & Reagent:
+
+ * `html/render` is shorthand for Reagent's `render-to-static-markup`.
+ * `html/$` is shorthand for the parser's `querySelector`.
+ * `html/$$` is shorthand for the parser's `querySelectorAll`.
 
 ### Email
 
@@ -202,16 +230,18 @@ SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
 If you don't specify a server ethereal.email will be used and the viewing link will be returned in the `url` property of the result.
 You can use this for testing your emails in dev mode.
 
+Also see the [send-email example](https://github.com/chr15m/sitefox/tree/main/examples/send-email) project.
+
 ### Logging
 
-By default the web server will write to log files in the local `logs` folder.
+By default the web server will write to log files in the `./logs` folder.
 These files are automatically rotated by the server. There are two types of logs:
 
  * `logs/access.log` which are standard web access logs in "combined" format.
  * `logs/error.log` where `console.log` and `console.error` is written (and duplicated to stdout).
 
-Note: the `error.log` is not written by default, you need to enable it with `logging/bind-console-to-file`.
-This will rebind stdout to "tee" into the logfile as well as printing to stdout.
+Note: the `error.log` is not written by default, you need to enable it by calling `(logging/bind-console-to-file)`.
+This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as printing to stdout.
 
 ## Who
 
