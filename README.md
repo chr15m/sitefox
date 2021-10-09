@@ -1,5 +1,9 @@
 Web framework for ClojureScript on Node. **WIP**.
 
+<p align="center">
+  <img src="docs/logo.svg?sanitize=true" alt="Sitefox logo"><br/>
+</p>
+
 In the tradition of Django, Flask, and Rails.
 Designed for indie devs who ship fast.
 Battle tested on real sites.
