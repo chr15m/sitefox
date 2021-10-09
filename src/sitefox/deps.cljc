@@ -25,6 +25,10 @@
       :cljs
       ["morgan" :as r-morgan])
    #?(:org.babashka/nbb
+      ["node-html-parser$default" :refer [parse]]
+      :cljs
+      ["node-html-parser" :refer [parse]])
+   #?(:org.babashka/nbb
       ["keyv$default" :as r-Keyv]
       :cljs
       ["keyv" :as r-Keyv])))
@@ -37,4 +41,5 @@
      (def session r-session)
      (def serve-static r-serve-static)
      (def morgan r-morgan)
+     (def parse-html parse)
      (def Keyv r-Keyv)))

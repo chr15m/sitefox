@@ -8,6 +8,7 @@
     "express-session": "^1.17.2",
     "keyv": "^4.0.3",
     "morgan": "^1.10.0",
+    "node-html-parser": "^4.1.5",
     "nodemailer": "^6.6.5",
     "rotating-file-stream": "^2.1.6",
     "sqlite3": "^5.0.2"
