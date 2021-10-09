@@ -5,7 +5,9 @@
     [applied-science.js-interop :as j]
     ["rotating-file-stream" :as rfs]))
 
-(defn bind-console-to-file []
+(defn bind-console-to-file
+  "Rebinds `console.log` and `console.error` so that they write to `./logs/error.log` as well as stdout."
+  []
   (let [logs (str js/__dirname "/logs")
         error-log (.createStream rfs "error.log" (clj->js {:interval "7d" :path logs :teeToStdout true}))
         log-fn (fn [& args]
@@ -30,7 +32,9 @@
         (.end error-log))
       (cb))))
 
-(defn bail [& msgs]
+(defn bail
+  "Print a message and then kill the current process."
+  [& msgs]
   (apply js/console.error msgs)
   (js/console.error "Server exit.")
   (flush-bound-console #(js/process.exit 1)))
@@ -42,6 +46,8 @@
       first
       (.replace "T" " ")))
 
-(defn log [file-path & args]
+(defn log
+  "Console log with built-in file and time reference."
+  [file-path & args]
   (apply print (conj (conj args (str (basename file-path) ":")) (now))))
 
