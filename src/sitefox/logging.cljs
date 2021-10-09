@@ -5,7 +5,7 @@
     [applied-science.js-interop :as j]
     ["rotating-file-stream" :as rfs]))
 
-(defn bind-console-log-to-file []
+(defn bind-console-to-file []
   (let [logs (str js/__dirname "/logs")
         error-log (.createStream rfs "error.log" (clj->js {:interval "7d" :path logs :teeToStdout true}))
         log-fn (fn [& args]
