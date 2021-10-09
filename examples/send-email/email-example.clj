@@ -1,4 +1,4 @@
-(ns webserver
+(ns email-example
   (:require
     [promesa.core :as p]
     [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
