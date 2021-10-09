@@ -167,7 +167,25 @@ Again, [promesa](https://github.com/funcool/promesa) is recommended for managing
 
 ### Sessions + authentication
 
-TBD.
+Sessions are enabled by default and each visitor to your server will have their own session.
+The session data is persisted server side across page loads so you can use it to store authentication status for example.
+Sessions are backed into a namespaced `kv` table (see the database section above).
+You can read and write arbitrary JS data structures to the session using `req.session`.
+
+To write a value to the session store (inside a route handler function):
+
+```clojure
+(let [session (aget req "session")]
+  (aset session "myvalue" 42))
+```
+
+To read a value from the session store:
+
+```clojure
+(aget req "session" "myvalue")
+```
+
+Authentication: coming soon.
 
 ### Templates
 
@@ -179,7 +197,10 @@ TBD.
 
 ### Logging
 
-TBD.
+By default the web server will write to log files in the local `logs` folder.
+These files are automatically rotated by the server.
+To see any console logs or errors take a look at `logs/error.log`.
+To see the access log in "combined" format see `logs/access.log`.
 
 ## Who
 
