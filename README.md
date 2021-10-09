@@ -8,7 +8,7 @@ In the tradition of Django, Flask, and Rails.
 Designed for indie devs who ship fast.
 Battle tested on real sites.
 
-[Quick start](#quick-start) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples) | [API](#api)
+[Philosophy](#philosophy) | [Quick start](#quick-start) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples)
 
 ## Philosophy
 
@@ -16,7 +16,7 @@ Battle tested on real sites.
  * [12 factor](https://12factor.net/).
  * 👇 Batteries included.
 
-## Batteries included
+### Batteries included
 
  * [Routing](#web-server-routes)
  * [Sessions](#sessions)
@@ -121,6 +121,11 @@ This example assumes require `[promesa.core :as p]`:
   )
 ```
 
+Also see these examples:
+
+ * [shadow-cljs server example](https://github.com/chr15m/sitefox/tree/main/examples/shadow-cljs).
+ * [nbb server example](https://github.com/chr15m/sitefox/tree/main/examples/nbb).
+
 ### Database
 
 Sitefox makes it easy to start storing key-value data with no configuration.
@@ -221,6 +226,8 @@ Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) 
  * `html/render` is shorthand for Reagent's `render-to-static-markup`.
  * `html/$` is shorthand for the parser's `querySelector`.
  * `html/$$` is shorthand for the parser's `querySelectorAll`.
+
+Also see the [templates example](https://github.com/chr15m/sitefox/tree/main/examples/templates) project.
 
 ### Email
 
