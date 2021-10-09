@@ -119,10 +119,11 @@ This example assumes require `[promesa.core :as p]`:
 ### Database
 
 Sitefox makes it easy to start storing key-value data with no configuration.
-You can then transition to more structured data later if you need.
+You can transition to more structured data later if you need it.
 It bundles [Keyv](https://github.com/lukechilds/keyv) which is a database backed key-value store.
+You can access the key-value store through `db/kv` and the underlying database through `db/client`.
 
-By default a local sqlite database is used so you can start persisting data on the server immediately without any configuration.
+By default a local sqlite database is used and you can start persisting data on the server immediately without any configuration.
 Once you move to production you can configure another database using the environment variable `DATABASE_URL`.
 For example, to use a postgres database called "somedatabase":
 
@@ -132,9 +133,7 @@ DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase
 
 Or simply `DATABASE_URL=postgres:///somedatabase` if your user has local access on the deploy server.
 
-Use the database and key-value interface as follows.
-
-Require the database module:
+To use the database and key-value interface first require the database module:
 
 ```clojure
 [sitefox.db :as db]
@@ -154,7 +153,7 @@ Retrieve the value again:
   (.then (fn [val] (print val))))
 ```
 
-You can use `db/client` to access the underlying database connection.
+You can use `db/client` to access the underlying database client.
 For example to make a query against the configured database:
 
 ```clojure
@@ -193,14 +192,26 @@ TBD.
 
 ### Email
 
-TBD.
+Sitefox bundles [nodemailer](https://nodemailer.com) for sending emails.
+Configure your outgoing SMTP server:
+
+```
+SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
+```
+
+If you don't specify a server ethereal.email will be used and the viewing link will be returned in the `url` property of the result.
+You can use this for testing your emails in dev mode.
 
 ### Logging
 
 By default the web server will write to log files in the local `logs` folder.
-These files are automatically rotated by the server.
-To see any console logs or errors take a look at `logs/error.log`.
-To see the access log in "combined" format see `logs/access.log`.
+These files are automatically rotated by the server. There are two types of logs:
+
+ * `logs/access.log` which are standard web access logs in "combined" format.
+ * `logs/error.log` where `console.log` and `console.error` is written (and duplicated to stdout).
+
+Note: the `error.log` is not written by default, you need to enable it with `logging/bind-console-to-file`.
+This will rebind stdout to "tee" into the logfile as well as printing to stdout.
 
 ## Who
 
