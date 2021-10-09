@@ -5,7 +5,12 @@
     [sitefox.util :refer [env]]
     ["nodemailer" :as nm]))
 
-(defn smtp-transport []
+(defn smtp-transport
+  "Create the SMTP mail transport to be used by `send-email`.
+  
+  The `SMTP_SERVER` environment variable specifies the connection settings.
+  If unset a test account at ethereal.email will be used."
+  []
   (let [smtp-url (env "SMTP_SERVER" nil)]
     (if smtp-url
       (js/Promise. (fn [res err] (res (.createTransport nm smtp-url))))
