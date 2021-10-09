@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "nbb": "0.0.97",
+    "sitefox": "file:../../"
+  },
+  "scripts": {
+    "send": "nbb --classpath ../../src/ email-example.clj"
+  }
+}
