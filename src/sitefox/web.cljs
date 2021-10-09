@@ -7,10 +7,9 @@
     [applied-science.js-interop :as j]
     ["path" :as path]
     ["process" :as process]
-    ["serve-static" :as serve-static]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
-    [sitefox.deps :refer [express cookies body-parser session morgan]]))
+    [sitefox.deps :refer [express cookies body-parser serve-static session morgan]]))
 
 (def ^:no-doc server-dir (or js/__dirname "./"))
 

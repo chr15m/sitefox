@@ -13,6 +13,10 @@
       :cljs
       ["body-parser" :as r-body-parser])
    #?(:org.babashka/nbb
+      ["serve-static$default" :as r-serve-static]
+      :cljs
+      ["serve-static" :as r-serve-static])
+   #?(:org.babashka/nbb
       ["express-session$default" :as r-session]
       :cljs
       ["express-session" :as r-session])
@@ -31,5 +35,6 @@
      (def cookies r-cookies)
      (def body-parser r-body-parser)
      (def session r-session)
+     (def serve-static r-serve-static)
      (def morgan r-morgan)
      (def Keyv r-Keyv)))
