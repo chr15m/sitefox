@@ -124,12 +124,17 @@ It bundles [Keyv](https://github.com/lukechilds/keyv) which is a database backed
 
 By default a local sqlite database is used so you can start persisting data on the server immediately without any configuration.
 Once you move to production you can configure another database using the environment variable `DATABASE_URL`.
-For example, to use a postgres database called "somedatabase": `DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase`.
-Or simply `postgres:///somedatabase` if your user has local access on the deploy server.
+For example, to use a postgres database called "somedatabase":
+
+```
+DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase
+```
+
+Or simply `DATABASE_URL=postgres:///somedatabase` if your user has local access on the deploy server.
 
 Use the database and key-value interface as follows.
 
-Require `kv` from the database module:
+Require the database module:
 
 ```clojure
 [sitefox.db :as db]
@@ -145,7 +150,7 @@ Now you can use `db/kv` to write a key-value to a namespaced "table":
 Retrieve the value again:
 
 ```clojure
-(-> (.get table "key)
+(-> (.get table "key")
   (.then (fn [val] (print val))))
 ```
 
