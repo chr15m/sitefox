@@ -1,5 +1,6 @@
 {:npm-deps
  {"rotating-file-stream" "^2.1.6",
+  "node-html-parser" "^4.1.5",
   "nodemailer" "^6.6.5",
   "cookie-parser" "^1.4.5",
   "morgan" "^1.10.0",
