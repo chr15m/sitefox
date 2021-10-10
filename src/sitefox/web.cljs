@@ -9,7 +9,7 @@
     ["process" :as process]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
-    [sitefox.deps :refer [express cookies body-parser serve-static session morgan]]))
+    [sitefox.deps :refer [express cookies body-parser serve-static session morgan csrf]]))
 
 (def ^:no-doc server-dir (or js/__dirname "./"))
 
@@ -65,6 +65,7 @@
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
+  (.use app (csrf))
   app)
 
 (defn static-folder

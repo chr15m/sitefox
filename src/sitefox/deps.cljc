@@ -29,6 +29,10 @@
       :cljs
       ["node-html-parser" :refer [parse]])
    #?(:org.babashka/nbb
+      ["csurf$default" :as r-csrf]
+      :cljs
+      ["csurf" :as r-csrf])
+   #?(:org.babashka/nbb
       ["keyv$default" :as r-Keyv]
       :cljs
       ["keyv" :as r-Keyv])))
@@ -39,6 +43,7 @@
      (def cookies r-cookies)
      (def body-parser r-body-parser)
      (def session r-session)
+     (def csrf r-csrf)
      (def serve-static r-serve-static)
      (def morgan r-morgan)
      (def parse-html parse)
