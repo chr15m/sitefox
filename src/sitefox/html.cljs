@@ -4,7 +4,7 @@
     [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
     [sitefox.deps :refer [parse-html]]))
 
-; (def template parse-html)
+(defn parse "Shorthand for parse-html." [html-string] (parse-html html-string))
 
 (defn $ "Shorthand for CSS style `querySelector` on parsed HTML `template`." [template selector] (.querySelector template selector))
 
@@ -22,5 +22,6 @@
   (let [t (parse-html html-string)
         el ($ t selector)
         rendered (r reagent-forms)]
+    (when (not el) (throw (js/Error. (str "HTML element not found: \"" selector "\""))))
     (j/call el :set_content rendered)
     (.toString t)))
