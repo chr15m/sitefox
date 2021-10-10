@@ -3,7 +3,6 @@
     [promesa.core :as p]
     ["fs" :as fs]
     ["node-input-validator" :refer [Validator]]
-    ["csurf" :as csrf]
     [sitefox.html :refer [render-into render]]
     [sitefox.web :as web]
     [sitefox.mail :as mail]))
