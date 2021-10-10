@@ -1,15 +1,15 @@
 (ns shadowtest.server
   (:require
     [promesa.core :as p]
-    [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
+    [sitefox.html :refer [render]]
     [sitefox.web :as web]
-    ;[sitefox.reloader :refer [reloader]]
-    [sitefox.logging :refer [bind-console-log-to-file]]))
+    [sitefox.reloader :refer [reloader]]
+    [sitefox.logging :refer [bind-console-to-file]]))
 
-(bind-console-log-to-file)
+(bind-console-to-file)
 
 (defn home-page [req res]
-  (.send res (r [:h1 "Hello world!"])))
+  (.send res (render [:h1 "Hello world!"])))
 
 (defn setup-routes [app]
   (web/reset-routes app)
@@ -18,7 +18,7 @@
 
 (defn main! []
   (p/let [[app host port] (web/start)]
-    ;(reloader (partial #'setup-routes app))
+    (reloader (partial #'setup-routes app))
     (setup-routes app)
     (println "Server main.")))
 
