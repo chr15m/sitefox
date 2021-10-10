@@ -24,6 +24,7 @@ Battle tested on real sites.
  * [Templates](#templates)
  * [Database + Key-value store](#database)
  * [Email](#email)
+ * [Forms](#forms)
  * [Logging](#logging)
 
 ## Quick start
@@ -223,6 +224,7 @@ You can load an HTML document and render Reagent forms into a selected element:
 
 Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) and offers shortcuts for working with HTML & Reagent:
 
+ * `html/parse` is shorthand for `node-html-parser/parse`.
  * `html/render` is shorthand for Reagent's `render-to-static-markup`.
  * `html/$` is shorthand for the parser's `querySelector`.
  * `html/$$` is shorthand for the parser's `querySelectorAll`.
@@ -242,6 +244,10 @@ If you don't specify a server ethereal.email will be used and the viewing link w
 You can use this for testing your emails in dev mode.
 
 Also see the [send-email example](https://github.com/chr15m/sitefox/tree/main/examples/send-email) project.
+
+### Forms
+
+See the [form validation example](https://github.com/chr15m/sitefox/tree/main/examples/form-validation) which uses [node-input-validator](https://www.npmjs.com/package/node-input-validator) and checks for CSRF problems.
 
 ### Logging
 
