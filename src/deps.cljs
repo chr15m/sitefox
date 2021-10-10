@@ -8,6 +8,7 @@
   "sqlite3" "^5.0.2",
   "caller-id" "^0.1.0",
   "express" "^4.17.1",
+  "csurf" "^1.11.0",
   "express-session" "^1.17.2",
   "keyv" "^4.0.3", 
   "@keyv/sqlite" "^2.0.2"}}
