@@ -8,6 +8,6 @@
     "sitefox": "file:../../"
   },
   "scripts": {
-    "serve": "nbb --classpath ../../src/ webserver.clj"
+    "serve": "nbb --classpath ../../src/ webserver.cljs"
   }
 }
