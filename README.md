@@ -41,6 +41,7 @@ An example server with two routes, one of which writes values to the key-value d
 ```clojure
 (ns my.server
   (:require
+    [promesa.core :as p]
     [sitefox.web :as web]
     [sitefox.db :refer [kv]]
     [sitefox.reloader :refer [reloader]]))
@@ -50,14 +51,10 @@ An example server with two routes, one of which writes values to the key-value d
   (.send res "Hello world!"))
 
 (defn hello [req res]
-  ; write a value to the db key value database
-  (-> (kv "sometable")
-    (.write "key" "42")
-    (.then
-      (fn []
-        ; database write is done
-        ; send a basic hello world response
-        (.json res true))))
+  ; write a value to the key-value database
+  (p/let [table (kv "sometable")
+          r (.write table "key" 42)]
+    (.json res true)))
 
 (defn setup-routes [app]
   ; flush all routes from express
@@ -73,12 +70,11 @@ An example server with two routes, one of which writes values to the key-value d
 (defn main! []
   ; create an express server and start serving
   ; BIND_ADDRESS & PORT env vars set host & port.
-  (-> (web/start)
-    (.then (fn [app host port]
-      ; reload the routes when the server js is modified (recompiled)
-      (reloader (partial #'setup-routes app))
-      ; set up the routes for the first time
-      (setup-routes app)))))
+  (p/let [[app _host _port] (web/start)]
+    ; reload the routes when the server js is modified (recompiled)
+    (reloader (partial #'setup-routes app))
+    ; set up the routes for the first time
+    (setup-routes app)))
 ```
 
 More [Sitefox examples here](./examples).
