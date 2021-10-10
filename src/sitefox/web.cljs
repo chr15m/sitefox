@@ -64,6 +64,7 @@
   (.use app (cookies (env "SECRET" "DEVMODE")))
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
+  (.use app (.urlencoded body-parser #js {:extended true}))
   app)
 
 (defn static-folder
