@@ -25,16 +25,16 @@
     [:div
      [:h3 "Please fill out the form"]
      [:form {:method "POST"}
-      [:p [:input.full {:name "name" :placeholder "Your name" :value (aget data "name") :on-change nil}]]
+      [:p [:input.full {:name "name" :placeholder "Your name" :default-value (aget data "name")}]]
       (when (aget ve "name")
         [:p.warning (aget ve "name" "message")])
-      [:p [:input.full {:name "date" :placeholder "Today's date YYYY-MM-DD" :value (aget data "date") :on-change nil}]]
+      [:p [:input.full {:name "date" :placeholder "Today's date YYYY-MM-DD" :default-value (aget data "date")}]]
       (when (aget ve "date")
         [:p.warning (aget ve "date" "message")])
-      [:p [:input.full {:name "count" :placeholder "How many pets do you have?" :value (aget data "count") :on-change nil}]]
+      [:p [:input.full {:name "count" :placeholder "How many pets do you have?" :default-value (aget data "count")}]]
       (when (aget ve "count")
         [:p.warning (aget ve "count" "message")])
-      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [:input {:name "_csrf" :type "hidden" :default-value csrf-token}]
       [:button {:type "submit"} "Submit"]]]))
 
 (defn view:thank-you []
