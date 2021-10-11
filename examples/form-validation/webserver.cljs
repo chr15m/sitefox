@@ -7,7 +7,7 @@
     [sitefox.web :as web]
     [sitefox.mail :as mail]))
 
-(def t (fs/readFileSync "index.html"))
+(def template (fs/readFileSync "index.html"))
 
 (def fields
   {:name ["required" "minLength:5" "maxLength:20"]
@@ -63,7 +63,7 @@
           [data validated validation-errors] (when is-post (validate-post-data req))
           passed-validation (and is-post validated)
           view (if passed-validation view:thank-you view:form)
-          rendered-html (render-into t "main" [view (.csrfToken req) data validation-errors])]
+          rendered-html (render-into template "main" [view (.csrfToken req) data validation-errors])]
     ; if the form was completed without errors send it
     (when passed-validation
       (print "Form validated. Sending email.")
@@ -74,7 +74,7 @@
   (if (= (aget err "code") "EBADCSRFTOKEN")
     (-> res
         (.status 403)
-        (.send (render-into t "main" [:div.warning "The form was tampered with."])))
+        (.send (render-into template "main" [:div.warning "The form was tampered with."])))
     (n err)))
 
 (defn setup-routes [app]
