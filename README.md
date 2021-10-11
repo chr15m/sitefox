@@ -236,10 +236,10 @@ Configure your outgoing SMTP server:
 SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
 ```
 
-If you don't specify a server debug setup will be used.
+If you don't specify an SMTP server, the email module will be in debug mode.
 No emails will be sent and the ethereal.email service will be used.
 After running `send-email` you can print the `url` property of the result.
-You can use the links for testing your emails in dev mode.
+You can use the links that are printed for testing your emails in dev mode.
 
 Also see the [send-email example](https://github.com/chr15m/sitefox/tree/main/examples/send-email) project.
 
