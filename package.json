@@ -18,7 +18,7 @@
     "nbb": "0.0.97"
   },
   "scripts": {
-    "sync-deps": "nbb bin/sync-deps.clj",
+    "sync-deps": "nbb bin/sync-deps.cljs",
     "docs": "( echo '# Readme'; cat README.md ) > codox-readme.md && clojure -X:codox"
   }
 }
