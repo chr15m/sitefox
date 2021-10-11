@@ -1,0 +1,11 @@
+{:source-paths ["src" "../../src"]
+ :dependencies [[reagent "1.1.0"]
+                [funcool/promesa "6.0.2"]
+                [applied-science/js-interop "0.2.7"]]
+ :builds {:server {:target :node-script
+                   :output-to "devserver.js"
+                   :main authexample.server/main!
+                   :modules {:server {:init-fn authexample.server/main!}}
+                   :release {:output-to "server.js"
+                             :output-dir "build"}
+                   :devtools {:after-load authexample.server/reload!}}}}
