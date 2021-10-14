@@ -84,6 +84,8 @@ More [Sitefox examples here](./examples).
 ### Web server & routes
 
 Sitefox uses the [express](https://expressjs.com) web server with sensible defaults for sessions and logging.
+See the [express routing documentation](http://expressjs.com/en/guide/routing.html) for details.
+
 Create a new server with `web/start` and set up a route which responds with "Hello world!" as follows:
 
 ```clojure
