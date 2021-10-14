@@ -1,4 +1,5 @@
 {
+  "name": "sitefox",
   "dependencies": {
     "@keyv/sqlite": "^2.0.2",
     "caller-id": "^0.1.0",
