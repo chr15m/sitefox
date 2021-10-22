@@ -1,0 +1,4 @@
+node_modules
+.*.swp
+logs
+database.sqlite

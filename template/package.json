@@ -1,0 +1,14 @@
+{
+  "name": "NAME",
+  "version": "0.0.1",
+  "dependencies": {
+    "minimal-stylesheet": "0.1.0",
+    "nbb": "0.0.107",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "sitefox": "chr15m/sitefox"
+  },
+  "scripts": {
+    "serve": "nbb --classpath node_modules/sitefox/src/ server.cljs"
+  }
+}

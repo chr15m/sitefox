@@ -1,0 +1,13 @@
+{
+  "name": "create-sitefox-nbb",
+  "description": "Start a sitefox + nbb webserver project.",
+  "repository": "https://github.com/chr15m/create-sitefox-nbb",
+  "version": "0.0.1",
+  "bin": {
+    "create-sitefox-nbb": "index.js"
+  },
+  "dependencies": {
+    "fs-extra": "^9.0.1",
+    "replace-in-file": "^6.1.0"
+  }
+}
