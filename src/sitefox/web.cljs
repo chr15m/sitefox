@@ -101,9 +101,7 @@
         srv (.bind (aget app "listen") app port host)]
     (js/Promise.
       (fn [res err]
-        (srv (fn []
-               (js/console.log "Web server started: " (str "http://" host ":" port))
-               (res #js [host port])))))))
+        (srv #(res #js [host port]))))))
 
 (defn start
   "Create a new express app and start serving it.
