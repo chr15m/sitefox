@@ -18,11 +18,11 @@ Battle tested on real sites.
 
 ### Batteries included
 
- * [Routing](#web-server-routes)
+ * [Routing](#web-server--routes)
+ * [Database + Key-value store](#database)
  * [Sessions](#sessions)
  * [Authentication](#authentication)
  * [Templates](#templates)
- * [Database + Key-value store](#database)
  * [Email](#email)
  * [Forms](#forms)
  * [Logging](#logging)
