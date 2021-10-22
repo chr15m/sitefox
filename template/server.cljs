@@ -1,10 +1,10 @@
 (ns webserver
   (:require
-    ["fs" :as fs]
-    [promesa.core :as p]
-    [sitefox.web :as web]
-    [sitefox.html :refer [render render-into]]
-    [nbb.core :refer [slurp *file* load-file]]))
+   ["fs" :as fs]
+   [nbb.core :refer [slurp *file* load-file]]
+   [promesa.core :as p]
+   [sitefox.html :refer [render render-into]]
+   [sitefox.web :as web]))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -48,10 +48,11 @@
                              (reset! is-loading true)
                              (load-file file)
                              (setup-routes app)
-                             (println "Done reloading!")
-                             (reset! is-loading false))
+                             (println "Done reloading!"))
                             (.catch (fn [err]
-                                      (.log js/console err))))
+                                      (.log js/console err)))
+                            (.finally (fn []
+                                        (reset! is-loading false))))
                         (do (println "Load already in progress, retrying in 500ms")
                             (js/setTimeout #(on-change file) 500))))]
     (.add watcher current-file)
