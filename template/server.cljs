@@ -4,7 +4,7 @@
     [promesa.core :as p]
     [sitefox.web :as web]
     [sitefox.html :refer [render render-into]]
-    [nbb.core :refer [slurp]]))
+    [nbb.core :refer [slurp *file* load-file]]))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -25,7 +25,38 @@
           (->> (render-into template "main" [component-main])
                (.send res)))))
 
-(p/let [app (web/create)
-        [host port] (web/serve app)]
-  (setup-routes app)
-  (print "Serving at" (str host ":" port)))
+(def current-file *file*)
+
+(defn dev
+  "Sets up filewatcher for development. Automatically re-evaluates this
+  file on changes."
+  [app]
+  (p/let [watcher
+          (-> (js/import "filewatcher")
+              (.catch (fn [err]
+                        (println "Error while loading filewatcher.")
+                        (println "Try: npm install filewatcher --save-dev")
+                        (.log js/console err)
+                        (js/process.exit 1))))
+          watcher (.-default watcher)
+          watcher (watcher)]
+    (.add watcher current-file)
+    (.on watcher "change" (fn [file _stat]
+                            (println "Rereloading" file)
+                            (-> (p/do!
+                                 (load-file file)
+                                 (setup-routes app)
+                                 (println "Done reloading!"))
+                                (.catch (fn [err]
+                                          (.log js/console err))))))))
+
+(defonce init
+  (p/let [dev? (= "true" js/process.env.DEV)
+          app (web/create)
+          _ (when dev?
+              (dev app))
+          [host port] (web/serve app)]
+    (setup-routes app)
+    (print "Serving at" (str host ":" port))
+    (when-not dev?
+      (println "Start with the DEV=true env variable to enable filewatcher."))))
