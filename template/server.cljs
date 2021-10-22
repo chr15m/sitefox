@@ -39,16 +39,24 @@
                         (.log js/console err)
                         (js/process.exit 1))))
           watcher (.-default watcher)
-          watcher (watcher)]
+          watcher (watcher)
+          is-loading (atom false)
+          on-change (fn on-change [file]
+                      (if-not @is-loading
+                        (-> (p/do!
+                             (println "Reloading!")
+                             (reset! is-loading true)
+                             (load-file file)
+                             (setup-routes app)
+                             (println "Done reloading!")
+                             (reset! is-loading false))
+                            (.catch (fn [err]
+                                      (.log js/console err))))
+                        (do (println "Load already in progress, retrying in 500ms")
+                            (js/setTimeout #(on-change file) 500))))]
     (.add watcher current-file)
     (.on watcher "change" (fn [file _stat]
-                            (println "Rereloading" file)
-                            (-> (p/do!
-                                 (load-file file)
-                                 (setup-routes app)
-                                 (println "Done reloading!"))
-                                (.catch (fn [err]
-                                          (.log js/console err))))))))
+                            (on-change file)))))
 
 (defonce init
   (p/let [dev? (= "true" js/process.env.DEV)
