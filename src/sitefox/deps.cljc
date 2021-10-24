@@ -35,7 +35,11 @@
    #?(:org.babashka/nbb
       ["keyv$default" :as r-Keyv]
       :cljs
-      ["keyv" :as r-Keyv])))
+      ["keyv" :as r-Keyv])
+   #?(:org.babashka/nbb
+      [nbb.core :refer [load-file]]
+      :cljs
+      [clojure.core :refer [load-file]])))
 
 #?(:cljs
    (do
@@ -47,4 +51,5 @@
      (def serve-static r-serve-static)
      (def morgan r-morgan)
      (def parse-html parse)
-     (def Keyv r-Keyv)))
+     (def Keyv r-Keyv)
+     (def cljs-loader load-file)))
