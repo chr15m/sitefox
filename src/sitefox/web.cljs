@@ -6,7 +6,6 @@
     [promesa.core :as p]
     [applied-science.js-interop :as j]
     ["path" :as path]
-    ["process" :as process]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
     [sitefox.deps :refer [express cookies body-parser serve-static session morgan csrf]]))
@@ -100,8 +99,8 @@
         port (env "PORT" "8000")
         srv (.bind (aget app "listen") app port host)]
     (js/Promise.
-      (fn [res err]
-        (srv #(res #js [host port]))))))
+      (fn [res _err]
+        (srv #(res [host port]))))))
 
 (defn start
   "Create a new express app and start serving it.
@@ -111,7 +110,7 @@
   (let [app (create)]
     (->
       (serve app)
-      (.then (fn [host port] [app host port])))))
+      (.then (fn [[host port]] [app host port])))))
 
 (defn build-absolute-uri
   "Creates an absolute URL including host and port.
@@ -121,7 +120,7 @@
         host (aget req "headers" "host")]
     (str (aget req "protocol") "://"
          (if (not= hostname "localhost") hostname host)
-         (if (not= (aget path 0) "/") "/")
+         (when (not= (aget path 0) "/") "/")
          path)))
 
 (defn strip-slash-redirect
