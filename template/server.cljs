@@ -3,8 +3,7 @@
     ["fs" :as fs]
     [promesa.core :as p]
     [sitefox.web :as web]
-    [sitefox.html :refer [render render-into]]
-    [nbb.core :refer [slurp]]))
+    [sitefox.html :refer [render-into]]))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -25,7 +24,6 @@
           (->> (render-into template "main" [component-main])
                (.send res)))))
 
-(p/let [app (web/create)
-        [host port] (web/serve app)]
+(p/let [[app host port] (web/start)]
   (setup-routes app)
   (print "Serving at" (str host ":" port)))
