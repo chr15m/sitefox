@@ -16,8 +16,8 @@
 
 (defonce init
   (p/let [self *file*
-          [app _host _port] (web/start)]
+          [app host port] (web/start)]
     (setup-routes app)
     (when (nil? (env "PROD"))
       (nbb-reloader #(setup-routes app) self))
-    (println "Serving.")))
+    (println "Serving on" (str "http://" host ":" port))))
