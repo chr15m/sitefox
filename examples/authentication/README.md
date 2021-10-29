@@ -1,4 +1,6 @@
-WIP. Sitefox email & password authentication example using [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html).
+**WIP.**
+
+Sitefox email & password authentication example using [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html).
 
 To run this example:
 
