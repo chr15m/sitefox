@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "filewatcher": "^3.0.1",
     "minimal-stylesheet": "^0.1.0",
     "nbb": "0.0.97",
     "node-input-validator": "^4.4.1",
@@ -8,6 +9,7 @@
     "sitefox": "file:../../"
   },
   "scripts": {
-    "serve": "nbb --classpath ../../src/ webserver.cljs"
+    "serve": "DEV=1 nbb --classpath ../../src/ webserver.cljs",
+    "serve-live": "nbb --classpath ../../src/ webserver.cljs"
   }
 }

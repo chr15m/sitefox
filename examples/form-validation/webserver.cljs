@@ -3,9 +3,11 @@
     [promesa.core :as p]
     ["fs" :as fs]
     ["node-input-validator" :refer [Validator]]
-    [sitefox.html :refer [render-into render]]
+    [nbb.core :refer [*file*]]
+    [sitefox.html :refer [render-into]]
     [sitefox.web :as web]
-    [sitefox.mail :as mail]))
+    [sitefox.mail :as mail]
+    [sitefox.reloader :refer [nbb-reloader]]))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -83,7 +85,9 @@
   (.use app handle-csrf-error)
   (.use app "/" serve-form))
 
-(p/let [app (web/create)
-        [_host _port] (web/serve app)]
-  (setup-routes app)
-  (println "Serving."))
+(defonce serve
+  (p/let [self *file*
+          [app host port] (web/start)]
+    (setup-routes app)
+    (nbb-reloader self #(setup-routes app))
+    (println "Serving on" (str "http://" host ":" port))))
