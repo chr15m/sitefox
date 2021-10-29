@@ -5,10 +5,11 @@
     [promesa.core :as p]
     [sitefox.html :refer [render-into]]
     [sitefox.web :as web]
-    [sitefox.reloader :refer [reloader]]
     [sitefox.logging :refer [bind-console-to-file]]))
 
 (bind-console-to-file)
+
+(defonce server (atom nil))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -80,7 +81,10 @@
 
 (defn main! []
   (p/let [[app host port] (web/start)]
-    (reloader (partial #'setup-routes app))
+    (reset! server app)
     (setup-routes app)
     (println "Server main.")))
 
+(defn ^:dev/after-load reload []
+  (js/console.log "reload")
+  (setup-routes @server))
