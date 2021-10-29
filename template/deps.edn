@@ -1,0 +1,4 @@
+{;; this deps.edn enables clojure-lsp features
+ :paths ["."]
+ :deps
+ {io.github.chr15m/sitefox {:git/tag "v0.0.1" :git/sha "b5520678b9fbf5919878a75750bb4d792c9eb8e2"}}}
