@@ -2,7 +2,7 @@
   "name": "create-sitefox-nbb",
   "description": "Set up a ClojureScript web server in one command with sitefox and nbb.",
   "repository": "https://github.com/chr15m/create-sitefox-nbb",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "bin": {
     "create-sitefox-nbb": "index.js"
   },
