@@ -1,33 +1,39 @@
 (ns sitefox.reloader
   (:require
     [promesa.core :as p]
-    ["caller-id" :as caller-id]
-    ["chokidar" :as file-watcher]
+    ["filewatcher" :as watcher]
+    [sitefox.util :refer [env]]
     [sitefox.deps :refer [cljs-loader]]))
 
-(defn reloader
-  "Runs `reload-function` every time the callee's file is changed.
-  Useful for re-mounting express routes during development mode when the build updates."
-  [reload-function & [source-file]]
-  (let [caller (.getData caller-id)
-        caller-path (aget caller "filePath")
-        source-file (or source-file caller-path)]
-    (->
-      (.watch file-watcher source-file)
-      (.on "change"
-           (fn [path]
-             (js/console.error (str "Reload triggered by " path))
-             (js/setTimeout
-               #(reload-function path)
-               500))))))
-
 (defn nbb-reloader
-  "Runs an nbb-friendly verson of the reloader which asks nbb to `load-file` first."
-  [reload-function parent-file]
-  (reloader
-    (fn [f]
-      (p/do!
-        (cljs-loader f)
-        (reload-function)
-        (print "Server reloaded.")))
-    parent-file))
+  "Sets up filewatcher for development. Automatically re-evaluates this
+  file on changes."
+  [current-file callback]
+  (when (env "DEV")
+    (p/let [watcher
+            (-> (js/import "filewatcher")
+                (.catch (fn [err]
+                          (println "Error while loading filewatcher.")
+                          (println "Try: npm install filewatcher --save-dev")
+                          (.log js/console err)
+                          (js/process.exit 1))))
+            watcher (.-default watcher)
+            watcher (watcher)
+            is-loading (atom false)
+            on-change (fn on-change [file]
+                        (if-not @is-loading
+                          (-> (p/do!
+                                (println "Reloading!")
+                                (reset! is-loading true)
+                                (cljs-loader file)
+                                (callback)
+                                (println "Done reloading!"))
+                              (.catch (fn [err]
+                                        (.log js/console err)))
+                              (.finally (fn []
+                                          (reset! is-loading false))))
+                          (do (println "Load already in progress, retrying in 500ms")
+                              (js/setTimeout #(on-change file) 500))))]
+      (.add watcher current-file)
+      (.on watcher "change" (fn [file _stat]
+                              (on-change file))))))

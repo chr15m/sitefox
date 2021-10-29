@@ -4,7 +4,6 @@
     [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
     [nbb.core :refer [*file*]]
     [sitefox.reloader :refer [nbb-reloader]]
-    [sitefox.util :refer [env]]
     [sitefox.web :as web]))
 
 (defn root-view [_req res]
@@ -18,6 +17,5 @@
   (p/let [self *file*
           [app host port] (web/start)]
     (setup-routes app)
-    (when (nil? (env "PROD"))
-      (nbb-reloader #(setup-routes app) self))
+    (nbb-reloader self #(setup-routes app))
     (println "Serving on" (str "http://" host ":" port))))
