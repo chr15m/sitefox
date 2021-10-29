@@ -12,7 +12,6 @@ Battle tested on real sites.
 
 ## Philosophy
 
- * Minimal.
  * [12 factor](https://12factor.net/).
  * 👇 Batteries included.
 
@@ -23,18 +22,54 @@ Battle tested on real sites.
  * [Sessions](#sessions)
  * [Authentication](#authentication)
  * [Templates](#templates)
+ * [Live reloading](#live-reloading)
  * [Email](#email)
  * [Forms](#forms)
  * [Logging](#logging)
 
+### Environment variables
+
+ * `PORT` - configure the port Sitefox web server binds to.
+ * `BIND_ADDRESS` - configure the IP address Sitefox web server binds to.
+ * `SMTP_URL` - configure the outgoing SMTP server e.g. `SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true`.
+ * `DATABASE_URL` - configure the database to connect to. Defaults to `sqlite://./database.sqlite`.
+
 ## Quick start
 
-Add Sitefox to your project as a dependency.
+The quickest way to start is using one of the `create` scripts which will set up an example project for you with one command.
+If you're building a simple website without much front-end interactivity beyond form submission, the [nbb](https://github.com/babashka/nbb) create script is the way:
+
+```
+npm init sitefox-nbb mywebsite
+```
+
+That will create a folder called `mywebsite` containing your new project.
+
+If you're building a full-stack ClojureScript application the [shadow-cljs](https://github.com/shadow-cljs) create script is the way:
+
+```
+npm init sitefox-shadow-fullstack myapp
+```
+
+That will create a folder called `myapp` containing your new project.
+
+### Manually installing Sitefox
+
+Add Sitefox to your project as a dependency:
 
 ```
 {:deps
  {io.github.chr15m/sitefox {:git/tag "v0.0.1" :git/sha "????"}}}
 ```
+
+If you're using `npm` you can install sitefox as a dependency that way.
+If you do that you will need to add `node_modules/sitefox/src` to your classpath somehow.
+
+```
+npm i sitefox
+```
+
+### Example server
 
 An example server with two routes, one of which writes values to the key-value database.
 
@@ -43,8 +78,7 @@ An example server with two routes, one of which writes values to the key-value d
   (:require
     [promesa.core :as p]
     [sitefox.web :as web]
-    [sitefox.db :refer [kv]]
-    [sitefox.reloader :refer [reloader]]))
+    [sitefox.db :refer [kv]]))
 
 (defn home-page [req res]
   ; send a basic hello world response
@@ -71,8 +105,6 @@ An example server with two routes, one of which writes values to the key-value d
   ; create an express server and start serving
   ; BIND_ADDRESS & PORT env vars set host & port.
   (p/let [[app _host _port] (web/start)]
-    ; reload the routes when the server js is modified (recompiled)
-    (reloader (partial #'setup-routes app))
     ; set up the routes for the first time
     (setup-routes app)))
 ```
@@ -195,7 +227,7 @@ To read a value from the session store:
 
 ### Authentication
 
-TBD.
+The [authentication example](./examples/authentication) is currently in progress.
 
 ### Templates
 
@@ -228,6 +260,10 @@ Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) 
  * `html/$$` is shorthand for the parser's `querySelectorAll`.
 
 Also see the [templates example](https://github.com/chr15m/sitefox/tree/main/examples/templates) project.
+
+### Live reloading
+
+Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
 
 ### Email
 
