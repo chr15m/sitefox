@@ -3,8 +3,8 @@
     ["fs" :as fs]
     [promesa.core :as p]
     [sitefox.web :as web]
-    [sitefox.html :refer [render render-into]]
-    [nbb.core :refer [slurp]]))
+    [sitefox.html :refer [render-into]]
+    [sitefox.reloader :refer [nbb-reloader]]))
 
 (def t (fs/readFileSync "index.html"))
 
@@ -21,7 +21,9 @@
           (->> (render-into t "main" [component-main])
                (.send res)))))
 
-(p/let [app (web/create)
-        [_host _port] (web/serve app)]
-  (setup-routes app)
-  (println "Serving."))
+(defonce init
+  (p/let [self *file*
+          [app host port] (web/start)]
+    (setup-routes app)
+    (nbb-reloader self #(setup-routes app))
+    (println "Serving on" (str "https://" host ":" port))))

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "filewatcher": "^3.0.1",
     "minimal-stylesheet": "^0.1.0",
     "nbb": "0.0.97",
     "react": "^17.0.2",
@@ -7,6 +8,6 @@
     "sitefox": "file:../../"
   },
   "scripts": {
-    "serve": "nbb --classpath ../../src/ webserver.cljs"
+    "serve": "DEV=1 nbb --classpath ../../src/ webserver.cljs"
   }
 }
