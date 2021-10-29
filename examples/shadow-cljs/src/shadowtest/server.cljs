@@ -3,22 +3,25 @@
     [promesa.core :as p]
     [sitefox.html :refer [render]]
     [sitefox.web :as web]
-    [sitefox.reloader :refer [reloader]]
     [sitefox.logging :refer [bind-console-to-file]]))
 
 (bind-console-to-file)
 
+(defonce server (atom nil))
+
 (defn home-page [req res]
-  (.send res (render [:h1 "Hello world!"])))
+  (.send res (render [:h1 "Hello world! yes"])))
 
 (defn setup-routes [app]
   (web/reset-routes app)
-  (.get app "/" home-page)
-  #_ (web/static-folder app "/" (if (env "NGINX_SERVER_NAME") "build" "public")))
+  (.get app "/" home-page))
 
 (defn main! []
   (p/let [[app host port] (web/start)]
-    (reloader (partial #'setup-routes app))
+    (reset! server app)
     (setup-routes app)
-    (println "Server main.")))
+    (println "Server listening on" (str "http://" host ":" port))))
 
+(defn ^:dev/after-load reload []
+  (js/console.log "reload")
+  (setup-routes @server))

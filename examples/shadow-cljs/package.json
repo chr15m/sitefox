@@ -1,10 +1,15 @@
 {
   "dependencies": {
+    "concurrently": "^6.3.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "shadow-cljs": "^2.15.10"
   },
   "scripts": {
-    "serve": "shadow-cljs release server && node server.js"
+    "devserver": "rm -f devserver.js; until [ -f devserver.js ]; do sleep 1; done; sleep 1 && while [ 1 ]; do node devserver.js; sleep 3; done;",
+    "watch": "shadow-cljs watch server",
+    "serve": "concurrently --kill-others \"npm run watch\" \"npm run devserver\"",
+    "build": "shadow-cljs release server",
+    "serve-live": "shadow-cljs release server && node server.js"
   }
 }

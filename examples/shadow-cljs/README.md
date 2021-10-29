@@ -7,6 +7,7 @@ To run this example:
 3. `npm i`
 4. `npm run serve`
 
-This will compile `src/shadowtest/server.cljs` to `server.js` and then run it. You can connect at http://localhost:8000/.
+This will start the live-reloading shadow-cljs server compiling devserver.js and run it.
+Once you see the message that the server is up you can connect at http://localhost:8000/.
 
-To examine the `serve` command above see the `scripts` section of `package.json`.
+You can run `npm run build` to get a compiled `server.js` for deployment to live systems.
