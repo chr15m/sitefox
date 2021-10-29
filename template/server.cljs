@@ -26,8 +26,9 @@
           (->> (render-into template "main" [component-main])
                (.send res)))))
 
-(p/let [self *file*
-        [app host port] (web/start)]
-  (setup-routes app)
-  (nbb-reloader self #(setup-routes app))
-  (print "Serving at" (str host ":" port)))
+(defonce init
+  (p/let [self *file*
+          [app host port] (web/start)]
+    (setup-routes app)
+    (nbb-reloader self #(setup-routes app))
+    (print "Serving at" (str host ":" port))))
