@@ -2,8 +2,10 @@
   (:require
     ["fs" :as fs]
     [promesa.core :as p]
+    [nbb.core :refer [*file*]]
     [sitefox.web :as web]
-    [sitefox.html :refer [render-into]]))
+    [sitefox.html :refer [render-into]]
+    [sitefox.reloader :refer [nbb-reloader]]))
 
 (def template (fs/readFileSync "index.html"))
 
@@ -24,6 +26,8 @@
           (->> (render-into template "main" [component-main])
                (.send res)))))
 
-(p/let [[app host port] (web/start)]
+(p/let [self *file*
+        [app host port] (web/start)]
   (setup-routes app)
+  (nbb-reloader self #(setup-routes app))
   (print "Serving at" (str host ":" port)))
