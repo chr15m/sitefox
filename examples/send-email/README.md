@@ -8,3 +8,6 @@ To test this out:
  4. `npm run send`
 
 This will run `email-example.clj` using nbb, and you will see the test email results output.
+
+This demo uses ethereal.email unless `SMTP_URL` is configured.
+Results will be printed to the console and not sent.
