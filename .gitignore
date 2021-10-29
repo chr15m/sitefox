@@ -1,3 +1,5 @@
 .*.swp
 node_modules
+package-lock.json
+workspace
 **/.clj-kondo/.cache
