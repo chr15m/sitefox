@@ -1,19 +1,23 @@
-STATIC=public/*.html public/images public/css
+STATIC=public/*.html public/css # public/images public/assets
 
-all: server.js build
+all: build build/server.js
 
-server.js: src/**/*.cljs shadow-cljs.edn
+build/server.js: src/**/*.cljs shadow-cljs.edn node_modules
 	npx shadow-cljs release server --debug
 
 build: src/**/* $(STATIC)
-	mkdir -p build
-	cp -LR --preserve=all $(STATIC) build
+	mkdir -p build/public
+	cp -LR --preserve=all $(STATIC) build/public
 	npx shadow-cljs release app
 	touch build
 
+node_modules: package.json
+	npm i
+	touch node_modules
+
 .PHONY: watch watcher server repl clean
 
-server:
+server: node_modules
 	@echo "waiting for devserver.js to appear."
 	@rm -f devserver.js; until [ -f devserver.js -a -d .shadow-cljs ]; do sleep 1; done; echo "devserver.js appeared. starting."
 	@sleep 1 && while [ 1 ]; do DEV=1 node devserver.js; sleep 3; echo "restarting devserver.js"; done

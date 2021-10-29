@@ -12,8 +12,6 @@
 
 (defonce server (atom nil))
 
-(def dev-mode (.endsWith (aget js/process "argv" 1) "devserver.js"))
-
 (def template (fs/readFileSync "public/index.html"))
 
 (defn my-page []
@@ -29,7 +27,7 @@
   (web/reset-routes app)
   (j/call app :get "/mypage" #(.send %2 (render-into template "body" [my-page])))
   (j/call app :get "/api/example.json" api-example)
-  (web/static-folder app "/" (if dev-mode "public" "build")))
+  (web/static-folder app "/" "public"))
 
 (defn main! []
   (p/let [[app host port] (web/start)]

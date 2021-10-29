@@ -5,10 +5,10 @@
  :builds {:server {:target :node-script
                    :output-to "devserver.js"
                    :main NAME.server/main!
-                   :release {:output-to "server.js"}}
+                   :release {:output-to "build/server.js"}}
           :app {:target :browser
                 :output-dir "public/js"
                 :asset-path "/js"
                 :modules {:main {:init-fn NAME.ui/main!}}
-                :release {:output-dir "build/js"}}}}
+                :release {:output-dir "build/public/js"}}}}
 
