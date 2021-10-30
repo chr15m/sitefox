@@ -20,9 +20,14 @@ if (name) {
     "to": name,
     "countMatches": true,
   });
-  console.log("Running npm install");
-  execSync("npm install", {"cwd": name, "stdio": ["inherit", "inherit", "inherit"]});
-  console.log("\nOk, you are ready to roll:\n$ cd " + name + "\n$ make watch\n\nThen edit src/" + name + "/*.cljs\n");
+  console.log();
+  console.log("Ok, you are ready to roll:");
+  console.log("$ cd " + name);
+  console.log("$ npm install");
+  console.log("$ make watch");
+  console.log("");
+  console.log("Then edit src/" + name + "/*.cljs");
+  console.log();
 } else {
   console.log("Usage: " + process.argv[1] + " APP-NAME");
 }
