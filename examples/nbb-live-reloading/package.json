@@ -1,0 +1,19 @@
+{
+  "name": "nbb-synctest",
+  "version": "0.0.1",
+  "dependencies": {
+    "browser-sync": "^2.27.7",
+    "minimal-stylesheet": "0.1.0",
+    "nbb": "0.0.107",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "sitefox": "chr15m/sitefox"
+  },
+  "devDependencies": {
+    "filewatcher": "^3.0.1"
+  },
+  "scripts": {
+    "serve": "DEV=1 nbb --classpath node_modules/sitefox/src/ server.cljs",
+    "serve-live": "nbb --classpath node_modules/sitefox/src/ server.cljs"
+  }
+}
