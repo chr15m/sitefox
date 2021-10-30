@@ -11,18 +11,18 @@ const dir = name && args[0].replace(/-/g, '_');
 if (name) {
   console.log("Creating", name);
   fs.copySync(__dirname + "/template", name);
-  fs.moveSync(name + "/gitignore", name + "/.gitignore");
+  fs.moveSync(name + "/src/NAME", name + "/src/" + dir);
   replace.sync({
     "files": [
       args[0] + "/**/**",
     ],
-    "from": "NAME",
+    "from": new RegExp("NAME", "g"),
     "to": name,
     "countMatches": true,
   });
   console.log("Running npm install");
   execSync("npm install", {"cwd": name, "stdio": ["inherit", "inherit", "inherit"]});
-  console.log("\nOk, you are ready to roll:\n$ cd " + name + "\n$ npm run serve\n\nThen edit server.cljs\n");
+  console.log("\nOk, you are ready to roll:\n$ cd " + name + "\n$ make watch\n\nThen edit src/" + name + "/*.cljs\n");
 } else {
   console.log("Usage: " + process.argv[1] + " APP-NAME");
 }
