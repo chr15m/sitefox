@@ -59,7 +59,8 @@ If you're building a simple website without much front-end interactivity beyond 
 npm init sitefox-nbb mywebsite
 ```
 
-That will create a folder called `mywebsite` containing your new project.
+This will create a folder called `mywebsite` containing your new project.
+Note you can use [Scittle](https://github.com/borkdude/scittle) to run cljs client-side.
 
 If you're building a full-stack ClojureScript application the [shadow-cljs](https://github.com/shadow-cljs) create script is the way:
 
