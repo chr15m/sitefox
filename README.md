@@ -38,10 +38,10 @@ Battle tested on real sites.
  * [Sessions](#sessions)
  * [Authentication](#authentication)
  * [Templates](#templates)
- * [Live reloading](#live-reloading)
  * [Email](#email)
  * [Forms](#forms)
  * [Logging](#logging)
+ * [Live reloading](#live-reloading)
 
 ### Environment variables
 
@@ -277,10 +277,6 @@ Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) 
 
 Also see the [templates example](https://github.com/chr15m/sitefox/tree/main/examples/templates) project.
 
-### Live reloading
-
-Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
-
 ### Email
 
 Sitefox bundles [nodemailer](https://nodemailer.com) for sending emails.
@@ -311,6 +307,10 @@ These files are automatically rotated by the server. There are two types of logs
 
 Note: the `error.log` is not written by default, you need to enable it by calling `(logging/bind-console-to-file)`.
 This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as printing to stdout.
+
+### Live reloading
+
+Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
 
 ## Who
 
