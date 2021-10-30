@@ -1,0 +1,4 @@
+build
+database.sqlite
+public/js
+.shadow-cljs
