@@ -10,6 +10,22 @@ Battle tested on real sites.
 
 [Philosophy](#philosophy) | [Quick start](#quick-start) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples)
 
+```clojure
+(ns webserver
+  (:require
+    [promesa.core :as p]
+    [sitefox.html :refer [render]]
+    [sitefox.web :as web]))
+
+(defn root [_req res]
+  (->> (render [:h1 "Hello world!"])
+       (.send res)))
+
+(p/let [[app host port] (web/start)]
+  (.get app "/" root)
+  (print "Serving on" (str "http://" host ":" port)))
+```
+
 ## Philosophy
 
  * [12 factor](https://12factor.net/).
