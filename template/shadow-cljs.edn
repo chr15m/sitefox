@@ -10,5 +10,6 @@
                 :output-dir "public/js"
                 :asset-path "/js"
                 :modules {:main {:init-fn NAME.ui/main!}}
+                :devtools {:watch-dir "public"}
                 :release {:output-dir "build/public/js"}}}}
 
