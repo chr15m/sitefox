@@ -1,13 +1,12 @@
 (ns sitefox.reloader
   (:require
     [promesa.core :as p]
-    ["filewatcher" :as watcher]
     [sitefox.util :refer [env]]
     [sitefox.deps :refer [cljs-loader]]))
 
 (defn nbb-reloader
   "Sets up filewatcher for development. Automatically re-evaluates this
-  file on changes."
+  file on changes. Uses browser-sync to push changes to the browser."
   [current-file callback]
   (when (env "DEV")
     (p/let [watcher
@@ -37,3 +36,18 @@
       (.add watcher current-file)
       (.on watcher "change" (fn [file _stat]
                               (on-change file))))))
+
+(defn sync-browser
+  "Sets up browser-sync for development. Hot-loads CSS and automatically
+  refreshes on server code change."
+  [host port & [files]]
+  (when (env "DEV")
+    (p/let [bs (-> (js/import "browser-sync")
+                   (.catch (fn [err]
+                             (println "Error while loading browser-sync.")
+                             (println "Try: npm install browser-sync --save-dev")
+                             (.log js/console err)
+                             (js/process.exit 1))))
+            init (aget bs "init")]
+      (init nil (clj->js {:files (or files ["public"])
+                          :proxy (str host ":" port)})))))
