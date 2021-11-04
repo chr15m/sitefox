@@ -6,8 +6,8 @@
 (defn env [k & [default]]
   (or (aget js/process.env k) default))
 
-(defn env-required [k]
-  (or (env k) (bail "Required environment variable is missing:" k)))
+(defn env-required [k & [msg]]
+  (or (env k) (bail (or msg (str "Required environment variable is missing:" k)))))
 
 (defn error-to-json [err]
   (let [e (js/JSON.parse (json-stringify-safe err))]
