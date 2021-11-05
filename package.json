@@ -19,7 +19,7 @@
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {
-    "nbb": "0.0.97"
+    "nbb": "0.0.107"
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.cljs",
