@@ -116,7 +116,7 @@ An example server with two routes, one of which writes values to the key-value d
   (.post app "/hello" hello)
   ; statically serve files from the "public" dir on "/"
   ; (or from "build" dir in PROD mode)
-  (web/static-folder app "/" (if (env "PROD") "build" "public")))
+  (web/static-folder app "/" "public"))
 
 (defn main! []
   ; create an express server and start serving
