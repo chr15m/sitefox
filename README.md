@@ -8,7 +8,7 @@ In the tradition of Django, Flask, and Rails.
 Designed for indie devs who ship fast.
 Battle tested on real sites.
 
-[Philosophy](#philosophy) | [Quick start](#quick-start) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples) | [Community](#community)
+[Philosophy](#philosophy) | [Quick start](#quick-start) | [Community](#community) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples)
 
 ```clojure
 (ns webserver
@@ -127,6 +127,13 @@ An example server with two routes, one of which writes values to the key-value d
 ```
 
 More [Sitefox examples here](./examples).
+
+## Community
+
+If you need support with Sitefox you can:
+
+ * Join the [Clojure Slack #sitefox channel](https://app.slack.com/client/T03RZGPFR/C02LB2842UA).
+ * You can also [ask a question on the GitHub discussions page](https://github.com/chr15m/sitefox/discussions).
 
 ## API
 
@@ -312,13 +319,6 @@ This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as 
 ### Live reloading
 
 Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
-
-## Community
-
-If you need support with Sitefox you can:
-
- * Join the [Clojure Slack #sitefox channel](https://app.slack.com/client/T03RZGPFR/C02LB2842UA).
- * You can also [ask a question on the GitHub discussions page](https://github.com/chr15m/sitefox/discussions).
 
 ## Who
 
