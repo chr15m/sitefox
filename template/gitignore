@@ -2,3 +2,4 @@ node_modules
 .*.swp
 logs
 database.sqlite
+.clj-kondo/.cache
