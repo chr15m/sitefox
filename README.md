@@ -305,6 +305,14 @@ Also see the [send-email example](https://github.com/chr15m/sitefox/tree/main/ex
 
 See the [form validation example](https://github.com/chr15m/sitefox/tree/main/examples/form-validation) which uses [node-input-validator](https://www.npmjs.com/package/node-input-validator) and checks for CSRF problems.
 
+To ensure you can `POST` without CSRF warnings you should create a hidden element like this (Reagent syntax):
+
+```clojure
+[:input {:name "_csrf" :type "hidden" :default-value (.csrfToken req)}]
+```
+
+If you're making an ajax `POST` from the client side, you should generate a CSRF token with `(.csrfToken req)`, pass it to the front-end, and then include it as a parameter called `_csrf` on your API `POST` call. The tokens remain valid so you can pass them to the front-end at any time, including setting it as a cookie.
+
 ### Logging
 
 By default the web server will write to log files in the `./logs` folder.
