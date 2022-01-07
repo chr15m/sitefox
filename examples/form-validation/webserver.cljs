@@ -36,7 +36,7 @@
       [:p [:input.full {:name "count" :placeholder "How many pets do you have?" :default-value (aget data "count")}]]
       (when (aget ve "count")
         [:p.warning (aget ve "count" "message")])
-      [:input {:name "_csrf" :type "hidden" :default-value csrf-token}]
+      [:p [:input {:name "_csrf" :type "hidden" :default-value csrf-token}]]
       [:button {:type "submit"} "Submit"]]]))
 
 (defn view:thank-you []
