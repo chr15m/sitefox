@@ -324,6 +324,18 @@ These files are automatically rotated by the server. There are two types of logs
 Note: the `error.log` is not written by default, you need to enable it by calling `(logging/bind-console-to-file)`.
 This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as printing to stdout.
 
+#### Tracebacks
+
+If an error occurs in a running server in production it can be useful to have the traceback emailed to somebody.
+You can tell Sitefox to email all tracebacks using `install-traceback-emailer`:
+
+```
+(install-traceback-emailer (env "ADMIN_EMAIL"))
+```
+
+Set the `ADMIN_EMAIL` environment variable to the email address where you want tracebacks to be sent.
+You can also specify an email as a string.
+
 ### Live reloading
 
 Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
