@@ -8,7 +8,7 @@
 (defn handle-traceback [email-address error]
   (js/console.error "handle-traceback")
   (p/let [result (when (= (env "NODE_ENV") "production")
-                   (send-email email-address email-address "Sitefox traceback" :text (str error)))]
+                   (send-email email-address email-address "Sitefox traceback" :text (or (aget error "stack") (str error))))]
     (when result
       (js/console.error "Emailed traceback:" result))
     (bail error)))
