@@ -8,7 +8,7 @@
   "Sets up filewatcher for development. Automatically re-evaluates this
   file on changes. Uses browser-sync to push changes to the browser."
   [current-file callback]
-  (when (env "DEV")
+  (when (or (env "DEV") (= (env "NODE_ENV") "development"))
     (p/let [watcher
             (-> (js/import "filewatcher")
                 (.catch (fn [err]
@@ -41,7 +41,7 @@
   "Sets up browser-sync for development. Hot-loads CSS and automatically
   refreshes on server code change."
   [host port & [files]]
-  (when (env "DEV")
+  (when (or (env "DEV") (= (env "NODE_ENV") "development"))
     (p/let [bs (-> (js/import "browser-sync")
                    (.catch (fn [err]
                              (println "Error while loading browser-sync.")
