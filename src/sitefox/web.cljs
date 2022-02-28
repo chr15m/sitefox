@@ -65,6 +65,8 @@
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
   (.use app (csrf))
+  ; emit a warning if SECRET is not set
+  (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
   app)
 
 (defn static-folder
