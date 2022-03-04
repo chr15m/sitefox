@@ -1,6 +1,7 @@
 (ns sitefox.reloader
   (:require
     [promesa.core :as p]
+    [applied-science.js-interop :as j]
     [sitefox.util :refer [env]]
     [sitefox.deps :refer [cljs-loader]]))
 
@@ -34,8 +35,8 @@
                           (do (println "Load already in progress, retrying in 500ms")
                               (js/setTimeout #(on-change file) 500))))]
       (.add watcher current-file)
-      (.on watcher "change" (fn [file _stat]
-                              (on-change file))))))
+      (j/call watcher :on "change" (fn [file _stat]
+                                     (on-change file))))))
 
 (defn sync-browser
   "Sets up browser-sync for development. Hot-loads CSS and automatically
