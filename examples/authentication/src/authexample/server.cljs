@@ -1,7 +1,6 @@
 (ns authexample.server
   (:require
     ["fs" :as fs]
-    ["crypto" :refer [createHash createHmac]]
     ["node-input-validator" :refer [Validator]]
     ["html-to-text" :refer [htmlToText]]
     [applied-science.js-interop :as j]
@@ -11,7 +10,8 @@
     [sitefox.util :refer [env]]
     [sitefox.ui :refer [log]]
     [sitefox.mail :refer [send-email]]
-    [sitefox.logging :refer [bind-console-to-file]]))
+    [sitefox.logging :refer [bind-console-to-file]]
+    [sitefox.auth :refer [make-hmac-token timestamp-expired?]]))
 
 (bind-console-to-file)
 
@@ -84,6 +84,12 @@
    [:p {:align "center"}
     [:a {:href verify-url} verify-url]]])
 
+(defn view:verify-sign-up [message]
+  [:div
+   [:h1 "Email verification"]
+   [:div.card
+    message]])
+
 (defn view:error []
   [:div.warning "The form was tampered with."])
 
@@ -111,15 +117,6 @@
             (not passed-validation))
       (do (.send res rendered-html) nil)
       data)))
-
-(defn make-hmac-token [secret size & materials]
-  (let [s (-> (createHash "sha512") (.update secret) .digest)
-        h (createHmac "sha512" s)]
-    (doseq [v materials]
-      (.update h (str v)))
-    (-> h
-        (.digest "hex")
-        (.slice 0 size))))
 
 ;***** handlers *****;
 
@@ -150,9 +147,9 @@
     ; emit a warning if SECRET is not set
     (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
     (when data
-      (p/let [time-window (-> (js/Date.) .getTime)
-              token (make-hmac-token (env "SECRET" "DEVMODE") 8 "sign-up" time-window (aget data "email"))
-              verify-url (str (web/build-absolute-uri req "/verify-sign-up") "?h=" token)
+      (p/let [time-stamp (-> (js/Date.) .getTime)
+              token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" (aget data "email"))
+              verify-url (str (web/build-absolute-uri req "/verify-sign-up") "?h=" token "&e=" (aget data "email") "&t=" time-stamp)
               email-html (render [email-view req verify-url])
               email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
                                                      :uppercaseHeadings false})
@@ -165,6 +162,25 @@
         (print "mail-result" mail-result)
         (print "verify-url" verify-url)
         (.send res (render-into template selector [view-done data]))))))
+
+(defn verify-sign-up [req res _n template selector view [view-success]]
+  (p/let [q (aget req "query")
+          token-supplied (aget q "h")
+          time-stamp (js/parseInt (aget q "t"))
+          email (aget q "e")
+          token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" email)
+          token-valid? (= token-supplied token)
+          token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))
+          message (cond
+                    ; check tokens match
+                    (not token-valid?)
+                    [:p.warning "The verification link has been tampered with. Please try to sign up again."]
+                    token-expired?
+                    [:p.warning "This verification link has expired. Please try to sign up again."]
+                    :else
+                    (or view-success
+                        [:p "Your email has been verified. You are now signed in."]))]
+    (.send res (render-into template selector [view message]))))
 
 (defn forgot-password [req res n template selector view]
   (case (aget req "method")
@@ -186,7 +202,7 @@
    (setup-auth-routes app template "main"))
   ([app template selector]
    (j/call app :use "/sign-up" (auth-view sign-up template selector view:sign-up view:sign-up-sent view:sign-up-email))
-   (j/call app :use "/verify-sign-up" (fn []))
+   (j/call app :use "/verify-sign-up" (auth-view verify-sign-up template selector view:verify-sign-up))
    (j/call app :use "/forgot-password" (auth-view forgot-password template selector view:forgot-password))
    (j/call app :use "/sign-in" (auth-view sign-in template selector view:sign-in))
    (j/call app :use "/magic-link" (fn []))))
