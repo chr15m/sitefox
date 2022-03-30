@@ -3,12 +3,17 @@
     ["fs" :as fs]
     ["passport" :as passport]
     ["passport-local" :as LocalStrategy]
+    ["node-input-validator" :refer [Validator]]
+    ["html-to-text" :refer [htmlToText]]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
-    [sitefox.html :refer [render-into]]
+    [sitefox.html :refer [render render-into]]
     [sitefox.web :as web]
     [sitefox.ui :refer [log]]
     [sitefox.db :refer [kv]]
+    [sitefox.util :refer [env]]
+    [sitefox.auth :refer [make-hmac-token]]
+    [sitefox.mail :refer [send-email]]
     [sitefox.logging :refer [bind-console-to-file]]))
 
 (bind-console-to-file)
@@ -36,21 +41,19 @@
   (let [csrf-token (j/call req :csrfToken)
         errors (j/get req :errors)
         data (j/get req :body)]
-    [:div
-     [:h1 "Sign in"]
-     [:div.card
-      [:p "Enter your email and password to sign in."]
-      [:form {:method "POST"}
-       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
-       [component:error errors :email]
-       [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)}]]
-       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-       [component:messages req]
-       [:div.actions
-        [:ul
-         [:li [:a {:href "/auth/sign-up"} "Sign up"]]
-         [:li [:a {:href "/auth/forgot-password"} "Forgot password?"]]]
-        [:button.primary {:type "submit"} "Sign in"]]]]]))
+    [:section.auth
+     [:p "Enter your email and password to sign in."]
+     [:form {:method "POST"}
+      [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
+      [component:error errors :email]
+      [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)}]]
+      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [component:messages req]
+      [:div.actions
+       [:ul
+        [:li [:a {:href "/auth/sign-up"} "Sign up"]]
+        [:li [:a {:href "/auth/forgot-password"} "Forgot password?"]]]
+       [:button.primary {:type "submit"} "Sign in"]]]]))
 
 ; sign up view ;
 
@@ -58,22 +61,35 @@
   (let [csrf-token (j/call req :csrfToken)
         data (j/get req :body)
         errors (j/get req :errors)]
-    [:div
-     [:h1 "Sign up"]
-     [:div.card
-      [:p "Enter your email to sign up."]
-      [:form {:method "POST"}
-       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (aget data "email")}]]
-       [component:error errors :email]
-       [:p "Verify email:"]
-       [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (aget data "email2")}]]
-       [component:error errors :email2]
-       [component:messages req]
-       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-       [:div.actions
-        [:ul
-         [:li [:a {:href "/sign-in"} "Sign in"]]]
-        [:button.primary {:type "submit"} "Sign up"]]]]]))
+    [:section.auth
+     [:p "Enter your email to sign up."]
+     [:form {:method "POST"}
+      [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
+      [component:error errors :email]
+      [:p "Verify email:"]
+      [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (j/get data :email2)}]]
+      [component:error errors :email2]
+      [component:messages req]
+      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [:div.actions
+       [:ul
+        [:li [:a {:href "/auth/sign-in"} "Sign in"]]]
+       [:button.primary {:type "submit"} "Sign up"]]]]))
+
+(defn component:sign-up-email [req verify-url]
+  [:div
+   [:h1 {:align "center"} "Signup verification"]
+   [:p {:align "center"} "Click the link to verify your signup at " (aget req "hostname")]
+   [:p {:align "center"}
+    [:a {:href verify-url} verify-url]]])
+
+(defn component:sign-up-form-done [req]
+  (let [data (j/get req :body)]
+    [:section.auth
+     [:h3 "Verification sent"]
+     [:p "Thanks for signing up. A verification has been sent to " [:strong (j/get data :email)] "."]
+     [:p "Please check your email and follow the activation link to verify your account."]
+     [:p "Don't forget to check your spam folder if you can't find the activation email."]]))
 
 ; forgot password view ;
 
@@ -89,7 +105,18 @@
            template
            (partition 2 selector-component-pairs))))
 
-;***** auth functions *****;
+(defn is-post? [req]
+  (= (aget req "method") "POST"))
+
+(defn validate-post-data [req fields & [warnings]]
+  (p/let [data (j/get req :body)
+          validator (Validator. data (clj->js fields) (clj->js (or warnings {})))
+          validated (.check validator)
+          validation-errors (j/get validator :errors)]
+    (when (not validated)
+      validation-errors)))
+
+;***** user data functions *****;
 
 (defn serialize-user [user cb]
   (log "serialize-user" user)
@@ -122,8 +149,12 @@
       (not= password "hello") (cb nil false invalid)
       :else (cb nil user))))
 
+; ***** route handling functions ***** ;
+
+; sign in middleware ;
+
 (defn middleware:sign-in [req res done]
-  (if (= (j/get req :method) "POST")
+  (if (is-post? req)
     ((passport/authenticate "local"
                             (fn [err user info]
                               (cond
@@ -133,6 +164,54 @@
                                 :else (j/call req :logIn user done))))
      req res done)
     (done)))
+
+(defn make-middleware:sign-in-redirect [post-sign-in-redirect]
+  (fn [req res done]
+    (if (user-from-req req)
+      (.redirect res (or post-sign-in-redirect "/"))
+      (done))))
+
+; sign up middleware ;
+
+(defn middleware:sign-up [req _res done]
+  (if (is-post? req)
+    (p/let [fields {:email ["required" "email"]
+                    :email2 ["required" "email" "same:email"]}
+            warnings {:email2.same "Email addresses must match."}
+            validation-errors (validate-post-data req fields warnings)]
+      (when validation-errors
+        (j/assoc! req :errors validation-errors))
+      (done))
+    (done)))
+
+(defn make-middleware:sign-up-email [email-view-component email-subject from-address]
+  (fn [req _res done]
+    (let [data (j/get req :body)
+          validation-errors (j/get req :errors)]
+      (if (and (is-post? req) (not validation-errors))
+        (do
+          (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
+          (p/let [hostname (j/get req :hostname)
+                  email-address (j/get data :email)
+                  from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
+                  email-view-component (or email-view-component component:sign-up-email)
+                  time-stamp (-> (js/Date.) .getTime)
+                  token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" email-address)
+                  verify-url (str (web/build-absolute-uri req "/auth/verify-sign-up") "?h=" token "&e=" email-address "&t=" time-stamp)
+                  email-html (render [email-view-component req verify-url])
+                  email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
+                                                         :uppercaseHeadings false})
+                  email-subject (or email-subject (str hostname " sign-up verification"))
+                  mail-result (send-email email-address
+                                          from-address
+                                          email-subject
+                                          :text email-text
+                                          :html email-html)]
+            (print "mail-result" mail-result)
+            (print "verify-url" verify-url)
+            (j/assoc-in! req [:auth :sign-up-email-sent] true)
+            (done)))
+        (done)))))
 
 ; ***** route installing functions ***** ;
 
@@ -148,17 +227,23 @@
     (passport/deserializeUser deserialize-user)
     (j/assoc! passport :_sitefox_setup_auth true)))
 
-(defn setup-email-based-auth [app template selector & [{:keys [post-sign-in-redirect]}]]
+(defn setup-email-based-auth [app template selector
+                              & [{:keys [post-sign-in-redirect
+                                         sign-up-email-component email-subject from-address]}]]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
   (j/call app :use "/auth/sign-in"
           middleware:sign-in
-          (fn [req res done]
-            (if (user-from-req req)
-              (.redirect res (or post-sign-in-redirect "/"))
-              (done)))
+          (make-middleware:sign-in-redirect post-sign-in-redirect)
           (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
-  #_ (j/call app :get "/auth/sign-up"
-             (fn [req res] (render-into-template res template "main" [component:sign-up-form req]))))
+  (j/call app :use "/auth/sign-up"
+          middleware:sign-up
+          (make-middleware:sign-up-email sign-up-email-component email-subject from-address)
+          (fn [req res]
+            (let [sign-up-email-sent (j/get-in req [:auth :sign-up-email-sent])
+                  view-component (if sign-up-email-sent
+                                   component:sign-up-form-done
+                                   component:sign-up-form)]
+              (render-into-template res template "main" [view-component req])))))
 
 ; user-space calls
 
@@ -181,7 +266,16 @@
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
     (j/call app :get "/" (fn [req res] (homepage req res template)))
     (setup-auth app)
-    (setup-email-based-auth app template "main")))
+    (setup-email-based-auth app template "main")
+    ; from-email defaults to env var FROM_EMAIL
+    ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
+    ; email-subject defaults to "req.hostname sign-up verification"
+    ; from-address defaults to no-reply@req.hostname
+    #_ (setup-email-based-auth app template "main"
+                               {:post-sign-in-redirect "/"
+                                :sign-up-email-component component:sign-up-email
+                                :email-subject "Welcome to thingo!"
+                                :from-address "no-reply@jones.com"})))
 
 (defn main! []
   (p/let [[app host port] (web/start)]
