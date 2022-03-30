@@ -122,37 +122,40 @@
       (not= password "hello") (cb nil false invalid)
       :else (cb nil user))))
 
+(defn middleware:sign-in [req res done]
+  (if (= (j/get req :method) "POST")
+    ((passport/authenticate "local"
+                            (fn [err user info]
+                              (cond
+                                err (done err)
+                                (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
+                                               (done))
+                                :else (j/call req :logIn user done))))
+     req res done)
+    (done)))
+
 ; ***** route installing functions ***** ;
 
 (defn setup-auth
-  "Set up passport based authentication. The `logout-redirect-url` defaults to '/'."
-  [app & [logout-redirect-url]]
+  "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'."
+  [app & [sign-out-redirect-url]]
   (j/call app :use (passport/authenticate "session"))
-  (passport/serializeUser serialize-user)
-  (passport/deserializeUser deserialize-user)
-  (j/call app :get "/auth/logout" (fn [req res]
-                                    (j/call req :logout)
-                                    (.redirect res (or logout-redirect-url "/")))))
+  (j/call app :get "/auth/sign-out" (fn [req res]
+                                      (j/call req :logout)
+                                      (.redirect res (or sign-out-redirect-url "/"))))
+  (when (not (j/get passport :_sitefox_setup_auth))
+    (passport/serializeUser serialize-user)
+    (passport/deserializeUser deserialize-user)
+    (j/assoc! passport :_sitefox_setup_auth true)))
 
-(defn setup-email-based-auth [app template selector & [{:keys [post-login-redirect]}]]
+(defn setup-email-based-auth [app template selector & [{:keys [post-sign-in-redirect]}]]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
-  (j/call app :get "/auth/login"
-          (fn [req res]
-            (render-into-template res template selector [component:sign-in-form req])))
-  (j/call app :post "/auth/login"
+  (j/call app :use "/auth/sign-in"
+          middleware:sign-in
           (fn [req res done]
-            ((passport/authenticate "local"
-                                    (fn [err user info]
-                                      (cond
-                                        err (done err)
-                                        (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
-                                                       (done))
-                                        :else (j/call req :logIn user
-                                                      (fn [err]
-                                                        (if err
-                                                          (done err)
-                                                          (.redirect res (or post-login-redirect "/"))))))))
-             req res done))
+            (if (user-from-req req)
+              (.redirect res (or post-sign-in-redirect "/"))
+              (done)))
           (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
   #_ (j/call app :get "/auth/sign-up"
              (fn [req res] (render-into-template res template "main" [component:sign-up-form req]))))
@@ -168,8 +171,8 @@
        (if user
          [:<>
            [:p "Signed in as " (pr-str user)]
-           [:p [:a {:href "/auth/logout"} "Sign out"]]]
-         [:p [:a {:href "/auth/login"} "Sign in"]])])))
+           [:p [:a {:href "/auth/sign-out"} "Sign out"]]]
+         [:p [:a {:href "/auth/sign-in"} "Sign in"]])])))
 
 (defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
