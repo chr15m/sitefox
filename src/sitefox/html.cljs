@@ -1,8 +1,9 @@
 (ns sitefox.html
   (:require
-    [applied-science.js-interop :as j]
-    [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
-    [sitefox.deps :refer [parse-html]]))
+    [cljs.test :refer [is]]
+   [applied-science.js-interop :as j]
+   [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
+   [sitefox.deps :refer [parse-html]]))
 
 (defn parse "Shorthand for parse-html." [html-string] (parse-html html-string))
 
@@ -18,6 +19,16 @@
   * `html-string` is the HTML document to be modified.
   * `selector` is a CSS-style selector such as `#app` or `main`.
   * `reagent-forms` is a valid Reagent component."
+  {:test (fn []
+           (let [html-string "<html><body><div id='app'></div></body></html>"]
+             (is (render-into html-string "body" [:div "Hello, world!"]))
+             (is (= (render-into html-string "#app" [:div "Hello, world!"])
+                    "<html><body><div id='app'><div>Hello, world!</div></div></body></html>"))
+             (is (= (render-into html-string "body" [:main "Hello, world!"])
+                    "<html><body><main>Hello, world!</main></body></html>"))
+             (is (thrown-with-msg?
+                  js/Error #"HTML element not found"
+                  (render-into html-string "#bad" [:div "Hello, world!"])))))}
   [html-string selector reagent-forms]
   (let [t (parse-html html-string)
         el ($ t selector)
