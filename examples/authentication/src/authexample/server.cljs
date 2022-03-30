@@ -1,17 +1,15 @@
 (ns authexample.server
   (:require
     ["fs" :as fs]
-    ["node-input-validator" :refer [Validator]]
-    ["html-to-text" :refer [htmlToText]]
+    ["passport" :as passport]
+    ["passport-local" :as LocalStrategy]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
-    [sitefox.html :refer [render-into render]]
+    [sitefox.html :refer [render-into]]
     [sitefox.web :as web]
-    [sitefox.util :refer [env]]
     [sitefox.ui :refer [log]]
-    [sitefox.mail :refer [send-email]]
-    [sitefox.logging :refer [bind-console-to-file]]
-    [sitefox.auth :refer [make-hmac-token timestamp-expired?]]))
+    [sitefox.db :refer [kv]]
+    [sitefox.logging :refer [bind-console-to-file]]))
 
 (bind-console-to-file)
 
@@ -19,200 +17,168 @@
 
 ;***** views *****;
 
-(defn component-error [errors k]
-  (let [err (aget errors (name k))]
-    (when err [:p.warning (-> err (aget "message"))])))
+(defn component:error [errors k]
+  (let [err (j/get-in errors [(name k) "message"])]
+    (when err [:p.error err])))
 
-(defn view:sign-in [csrf-token data errors]
-  [:div
-   [:h1 "Sign in"]
-   [:div.card
-    [:p "Enter your email and password to sign in."]
-    [:form {:method "POST"}
-     [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (aget data "email")}]]
-     [component-error errors :email]
-     [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (aget data "password")}]]
-     [component-error errors :password]
-     [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-     [:div.actions
-      [:ul
-       [:li [:a {:href "/sign-up"} "Sign up"]]
-       [:li [:a {:href "/forgot-password"} "Forgot password?"]]]
-      [:button.primary {:type "submit"} "Sign in"]]]]])
+(defn component:messages [req]
+  (let [messages (j/get-in req [:auth :messages])]
+    [:ul.messages
+     (for [m (range (count messages))]
+       (let [message (nth messages m)]
+         [:li {:key m
+               :class (j/get message :class)}
+          (j/get message :message)]))]))
 
-(defn view:sign-up [csrf-token data errors]
-  [:div
-   [:h1 "Sign up"]
-   [:div.card
-    [:p "Enter your email to sign up."]
-    [:form {:method "POST"}
-     [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (aget data "email")}]]
-     [component-error errors :email]
-     [:p "Verify email:"]
-     [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (aget data "email2")}]]
-     [component-error errors :email2]
-     [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-     [:div.actions
-      [:ul
-       [:li [:a {:href "/sign-in"} "Sign in"]]]
-      [:button.primary {:type "submit"} "Sign up"]]]]])
+; sign in view ;
 
-(defn view:sign-up-sent [data]
-  [:div
-   [:h1 "Verification sent"]
-   [:div.card
-    [:p "Thanks for signing up. A verification has been sent to " (aget data "email") "."]
-    [:p "Please check your email and follow the activation link to verify your account."]]])
+(defn component:sign-in-form [req]
+  (let [csrf-token (j/call req :csrfToken)
+        errors (j/get req :errors)
+        data (j/get req :body)]
+    [:div
+     [:h1 "Sign in"]
+     [:div.card
+      [:p "Enter your email and password to sign in."]
+      [:form {:method "POST"}
+       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
+       [component:error errors :email]
+       [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)}]]
+       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+       [component:messages req]
+       [:div.actions
+        [:ul
+         [:li [:a {:href "/auth/sign-up"} "Sign up"]]
+         [:li [:a {:href "/auth/forgot-password"} "Forgot password?"]]]
+        [:button.primary {:type "submit"} "Sign in"]]]]]))
 
-(defn view:forgot-password [csrf-token]
-  [:div
-   [:h1 "Sign up"]
-   [:div.card
-    [:p "Enter your email to reset your password."]
-    [:form {:method "POST"}
-     [:p [:input.fit {:name "email" :placeholder "Your email"}]]
-     [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-     [:div.actions
-      [:ul
-       [:li [:a {:href "/sign-in"} "Sign in"]]]
-      [:button.primary {:type "submit"} "Reset"]]]]])
+; sign up view ;
 
-(defn view:sign-up-email [req verify-url]
-  [:div
-   [:h1 {:align "center"} "Signup verification"]
-   [:p {:align "center"} "Click the link to verify your signup at " (aget req "hostname")]
-   [:p {:align "center"}
-    [:a {:href verify-url} verify-url]]])
+(defn component:sign-up-form [req]
+  (let [csrf-token (j/call req :csrfToken)
+        data (j/get req :body)
+        errors (j/get req :errors)]
+    [:div
+     [:h1 "Sign up"]
+     [:div.card
+      [:p "Enter your email to sign up."]
+      [:form {:method "POST"}
+       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (aget data "email")}]]
+       [component:error errors :email]
+       [:p "Verify email:"]
+       [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (aget data "email2")}]]
+       [component:error errors :email2]
+       [component:messages req]
+       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+       [:div.actions
+        [:ul
+         [:li [:a {:href "/sign-in"} "Sign in"]]]
+        [:button.primary {:type "submit"} "Sign up"]]]]]))
 
-(defn view:verify-sign-up [message]
-  [:div
-   [:h1 "Email verification"]
-   [:div.card
-    message]])
+; forgot password view ;
 
-(defn view:error []
-  [:div.warning "The form was tampered with."])
+;***** non-auth functions *****;
 
-;***** functions *****;
+(defn render-into-template
+  "Render `selector` `component` pairs into the template and return the resulting HTML string as a response."
+  [res template & selector-component-pairs]
+  (.send res
+         (reduce
+           (fn [html [selector component]]
+             (render-into html selector component))
+           template
+           (partition 2 selector-component-pairs))))
 
-(defn is-post [req]
-  (= (aget req "method") "POST"))
+;***** auth functions *****;
 
-(defn serve-form [req res template selector view]
-  (.send res (render-into template selector [view (j/call req :csrfToken)])))
+(defn serialize-user [user cb]
+  (log "serialize-user" user)
+  (cb nil user))
 
-(defn validate-post-data [req fields warnings]
-  (p/let [data (aget req "body")
-          validator (Validator. data (clj->js fields) (clj->js (or warnings {})))
-          validated (.check validator)
-          validation-errors (aget validator "errors")]
-    [data validated validation-errors]))
+(defn deserialize-user [user cb]
+  (log "deserialize-user" user)
+  (cb nil user))
 
-(defn check-form [req res template selector view fields & [warnings]]
-  (p/let [is-post (= (aget req "method") "POST")
-          [data validated validation-errors] (when is-post (validate-post-data req fields warnings))
-          passed-validation (and is-post validated)
-          rendered-html (render-into template selector [view (j/call req :csrfToken) (or data #js {}) (or validation-errors #js {})])]
-    (if (or (not is-post)
-            (not passed-validation))
-      (do (.send res rendered-html) nil)
-      data)))
+(defn user-from-req [req]
+  (j/get-in req [:session :passport :user]))
 
-;***** handlers *****;
+(defn get-user-by-key
+  "Auth key is the lookup token such as email or username."
+  [auth-key-type auth-key]
+  (p/let [user-ids-table (kv "user-ids")
+          users-table (kv "users")
+          user-id (.get user-ids-table (str auth-key-type ":" auth-key))
+          user (when user-id
+                 (.get users-table user-id))]
+    (when user
+      (j/assoc! user :id user-id))))
 
-(defn handle-csrf-error [err _req res n template selector view]
-  (if (= (aget err "code") "EBADCSRFTOKEN")
-    (-> res
-        (.status 403)
-        (.send (render-into template selector view)))
-    (n err)))
+(defn verify-kv-email-user [email password cb]
+  (p/let [user (clj->js {:auth {:email email}}) ;(get-user-by-key "email" email)
+          auth (j/get-in user [:auth :email])
+          invalid #js {:message "Invalid email or password."}]
+    (cond
+      (nil? auth) (cb nil false invalid)
+      (not= password "hello") (cb nil false invalid)
+      :else (cb nil user))))
 
-(defn csrf-handler [template selector view]
-  (fn [err req res n]
-    (handle-csrf-error err req res n template selector view)))
+; ***** route installing functions ***** ;
 
-(defn sign-in [req res _n template selector view]
-  (p/let [fields {:email ["required" "email"]
-                  :password ["required"]}
-          data (check-form req res template selector view fields)]
-    (when data
-      (log "data:" data)
-      (.send res "VALID"))))
+(defn setup-auth
+  "Set up passport based authentication. The `logout-redirect-url` defaults to '/'."
+  [app & [logout-redirect-url]]
+  (j/call app :use (passport/authenticate "session"))
+  (passport/serializeUser serialize-user)
+  (passport/deserializeUser deserialize-user)
+  (j/call app :get "/auth/logout" (fn [req res]
+                                    (j/call req :logout)
+                                    (.redirect res (or logout-redirect-url "/")))))
 
-(defn sign-up [req res _n template selector view [view-done email-view email-subject]]
-  (p/let [fields {:email ["required" "email"]
-                  :email2 ["required" "email" "same:email"]}
-          messages {:email2.same "Email addresses must match."}
-          data (check-form req res template selector view fields messages)]
-    ; emit a warning if SECRET is not set
-    (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
-    (when data
-      (p/let [time-stamp (-> (js/Date.) .getTime)
-              token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" (aget data "email"))
-              verify-url (str (web/build-absolute-uri req "/verify-sign-up") "?h=" token "&e=" (aget data "email") "&t=" time-stamp)
-              email-html (render [email-view req verify-url])
-              email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
-                                                     :uppercaseHeadings false})
-              email-subject (or email-subject (str (aget req "hostname") " sign-up verification"))
-              mail-result (send-email (aget data "email")
-                                      (env "FROM_EMAIL" (str "no-reply@" (aget req "hostname")))
-                                      email-subject
-                                      :text email-text
-                                      :html email-html)]
-        (print "mail-result" mail-result)
-        (print "verify-url" verify-url)
-        (.send res (render-into template selector [view-done data]))))))
+(defn setup-email-based-auth [app template selector & [{:keys [post-login-redirect]}]]
+  (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
+  (j/call app :get "/auth/login"
+          (fn [req res]
+            (render-into-template res template selector [component:sign-in-form req])))
+  (j/call app :post "/auth/login"
+          (fn [req res done]
+            ((passport/authenticate "local"
+                                    (fn [err user info]
+                                      (cond
+                                        err (done err)
+                                        (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
+                                                       (done))
+                                        :else (j/call req :logIn user
+                                                      (fn [err]
+                                                        (if err
+                                                          (done err)
+                                                          (.redirect res (or post-login-redirect "/"))))))))
+             req res done))
+          (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
+  #_ (j/call app :get "/auth/sign-up"
+             (fn [req res] (render-into-template res template "main" [component:sign-up-form req]))))
 
-(defn verify-sign-up [req res _n template selector view [view-success]]
-  (p/let [q (aget req "query")
-          token-supplied (aget q "h")
-          time-stamp (js/parseInt (aget q "t"))
-          email (aget q "e")
-          token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" email)
-          token-valid? (= token-supplied token)
-          token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))
-          message (cond
-                    ; check tokens match
-                    (not token-valid?)
-                    [:p.warning "The verification link has been tampered with. Please try to sign up again."]
-                    token-expired?
-                    [:p.warning "This verification link has expired. Please try to sign up again."]
-                    :else
-                    (or view-success
-                        [:p "Your email has been verified. You are now signed in."]))]
-    (.send res (render-into template selector [view message]))))
+; user-space calls
 
-(defn forgot-password [req res n template selector view]
-  (case (aget req "method")
-    "GET" (serve-form req res template selector view)
-    "POST" (.send res "Sign in")
-    (n)))
-
-(defn change-password [req res n template selector view])
-
-(defn magic-link [req res n template selector view])
-
-(defn auth-view [view-function template selector view & args]
-  (fn [err req res]
-    (view-function err req res template selector view args)))
-
-(defn setup-auth-routes
-  "Add authentication to your app. This function adds /sign-in /sign-up and /forgot-password routes to your app."
-  ([app template]
-   (setup-auth-routes app template "main"))
-  ([app template selector]
-   (j/call app :use "/sign-up" (auth-view sign-up template selector view:sign-up view:sign-up-sent view:sign-up-email))
-   (j/call app :use "/verify-sign-up" (auth-view verify-sign-up template selector view:verify-sign-up))
-   (j/call app :use "/forgot-password" (auth-view forgot-password template selector view:forgot-password))
-   (j/call app :use "/sign-in" (auth-view sign-in template selector view:sign-in))
-   (j/call app :use "/magic-link" (fn []))))
+(defn homepage [req res template]
+  (let [user (user-from-req req)]
+    (render-into-template
+      res template "main"
+      [:div
+       [:h1 "Auth demo"]
+       (if user
+         [:<>
+           [:p "Signed in as " (pr-str user)]
+           [:p [:a {:href "/auth/logout"} "Sign out"]]]
+         [:p [:a {:href "/auth/login"} "Sign in"]])])))
 
 (defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
+    ; (j/call app :use (csrf-handler template "main" view:error))
     (web/reset-routes app)
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
-    (j/call app :use (csrf-handler template "main" view:error))
-    (setup-auth-routes app template "main")))
+    (j/call app :get "/" (fn [req res] (homepage req res template)))
+    (setup-auth app)
+    (setup-email-based-auth app template "main")))
 
 (defn main! []
   (p/let [[app host port] (web/start)]
