@@ -12,7 +12,7 @@
     [sitefox.ui :refer [log]]
     [sitefox.db :refer [kv]]
     [sitefox.util :refer [env]]
-    [sitefox.auth :refer [make-hmac-token]]
+    [sitefox.auth :refer [make-hmac-token timestamp-expired?]]
     [sitefox.mail :refer [send-email]]
     [sitefox.logging :refer [bind-console-to-file]]))
 
@@ -130,23 +130,52 @@
   (j/get-in req [:session :passport :user]))
 
 (defn get-user-by-key
-  "Auth key is the lookup token such as email or username."
+  "Get a user object from the user's kv table. The `auth-key` is the lookup token such as email or username."
   [auth-key-type auth-key]
   (p/let [user-ids-table (kv "user-ids")
           users-table (kv "users")
-          user-id (.get user-ids-table (str auth-key-type ":" auth-key))
+          user-id (.get user-ids-table (str (name auth-key-type) ":" auth-key))
           user (when user-id
                  (.get users-table user-id))]
     (when user
       (j/assoc! user :id user-id))))
 
+(defn create-user
+  "Creates a new user object in the user's kv table.
+   Creates a lookup from `auth-key` to `user-id` for convenient retrieval using `get-user-by-key`."
+  [auth-key-type auth-key & [user-data]]
+  (p/let [user-data (or user-data #js {})
+          user-ids-table (kv "user-ids")
+          users-table (kv "users")
+          user-id (str (random-uuid))
+          user-data (j/assoc user-data :id user-id)]
+    (.set user-ids-table (str (name auth-key-type) ":" auth-key) user-id)
+    (.set users-table user-id user-data)
+    user-data))
+
+(defn get-or-create-user-by-key
+  "Try to find a user objet by it's `auth-key` (i.e. username/email) and create a new user with that `auth-key` if it can't be found."
+  [auth-key-type auth-key & [user-data]]
+  (or (get-user-by-key auth-key-type auth-key)
+      (create-user auth-key-type auth-key (or user-data #js {}))))
+
+(defn save-user
+  "Persist a user object back into the users kv table, overwriting the existing object."
+  [user-data]
+  (p/let [user-id (j/get user-data :id)
+          users-table (kv "users")
+          user-data (j/assoc user-data :id user-id)]
+    (.set users-table user-id user-data)))
+
+
 (defn verify-kv-email-user [email password cb]
-  (p/let [user (clj->js {:auth {:email email}}) ;(get-user-by-key "email" email)
-          auth (j/get-in user [:auth :email])
+  (p/let [user (get-user-by-key "email" email)
+          hashed-password (j/get-in user [:auth :password])
+          ;auth (j/get-in user [:auth :email])
           invalid #js {:message "Invalid email or password."}]
     (cond
-      (nil? auth) (cb nil false invalid)
-      (not= password "hello") (cb nil false invalid)
+      (nil? user) (cb nil false invalid)
+      (not= password hashed-password) (cb nil false invalid)
       :else (cb nil user))))
 
 ; ***** route handling functions ***** ;
@@ -186,32 +215,51 @@
 
 (defn make-middleware:sign-up-email [email-view-component email-subject from-address]
   (fn [req _res done]
-    (let [data (j/get req :body)
-          validation-errors (j/get req :errors)]
-      (if (and (is-post? req) (not validation-errors))
-        (do
-          (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
-          (p/let [hostname (j/get req :hostname)
-                  email-address (j/get data :email)
-                  from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
-                  email-view-component (or email-view-component component:sign-up-email)
-                  time-stamp (-> (js/Date.) .getTime)
-                  token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" email-address)
-                  verify-url (str (web/build-absolute-uri req "/auth/verify-sign-up") "?h=" token "&e=" email-address "&t=" time-stamp)
-                  email-html (render [email-view-component req verify-url])
-                  email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
-                                                         :uppercaseHeadings false})
-                  email-subject (or email-subject (str hostname " sign-up verification"))
-                  mail-result (send-email email-address
-                                          from-address
-                                          email-subject
-                                          :text email-text
-                                          :html email-html)]
-            (print "mail-result" mail-result)
-            (print "verify-url" verify-url)
-            (j/assoc-in! req [:auth :sign-up-email-sent] true)
-            (done)))
+    (p/let [data (j/get req :body)
+            validation-errors (j/get req :errors)]
+      (when (and (is-post? req) (not validation-errors))
+        (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
+        (p/let [hostname (j/get req :hostname)
+                email-address (j/get data :email)
+                from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
+                email-view-component (or email-view-component component:sign-up-email)
+                time-stamp (-> (js/Date.) .getTime)
+                token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" hostname email-address)
+                verify-url (str (web/build-absolute-uri req "/auth/verify-sign-up") "?h=" token "&e=" email-address "&t=" time-stamp)
+                email-html (render [email-view-component req verify-url])
+                email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
+                                                       :uppercaseHeadings false})
+                email-subject (or email-subject (str hostname " sign-up verification"))
+                mail-result (send-email email-address
+                                        from-address
+                                        email-subject
+                                        :text email-text
+                                        :html email-html)]
+          (print "mail-result" mail-result)
+          (print "verify-url" verify-url)
+          (j/assoc-in! req [:auth :sign-up-email-sent] true))
         (done)))))
+
+(defn middleware:verify-sign-up [req _res done]
+  (p/let [q (j/get req :query)
+          hostname (j/get req :hostname)
+          token-supplied (j/get q :h)
+          time-stamp (js/parseInt (j/get q :t))
+          email-address (j/get q :e)
+          token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" hostname email-address)
+          token-valid? (= token-supplied token)
+          token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))
+          message (cond
+                    ; check tokens match
+                    (not token-valid?)
+                    {:message "The verification link has been tampered with. Please try to sign up again."
+                     :class :error}
+                    token-expired?
+                    {:message "This verification link has expired. Please try to sign up again."
+                     :class :error})]
+    (j/assoc-in! req [:auth :sign-up-verification] {:verified (and token-valid? (not token-expired?))
+                                                    :message message})
+    (done)))
 
 ; ***** route installing functions ***** ;
 
@@ -236,6 +284,8 @@
           (make-middleware:sign-in-redirect post-sign-in-redirect)
           (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
   (j/call app :use "/auth/sign-up"
+          ; TODO: handle the case where the user already exists
+          ; (maybe just send them the verification email anyway any make it idempotent?
           middleware:sign-up
           (make-middleware:sign-up-email sign-up-email-component email-subject from-address)
           (fn [req res]
@@ -243,7 +293,17 @@
                   view-component (if sign-up-email-sent
                                    component:sign-up-form-done
                                    component:sign-up-form)]
-              (render-into-template res template "main" [view-component req])))))
+              (render-into-template res template "main" [view-component req]))))
+  (j/call app :use "/auth/verify-sign-up"
+          middleware:verify-sign-up
+          ; TODO: handle invalid verification by showing the user view:simple-message
+          ;middleware:sign-up-verify-failed
+          ; TODO: handle change password form submission, saving user
+          ;middleware:update-password
+          ; TODO: show change-password form
+          ;middleware:change-password
+          ; TODO: always show view:simple-message at the end?
+          (fn [req res] (render-into-template res template selector [component:sign-in-form req]))))
 
 ; user-space calls
 
@@ -261,11 +321,11 @@
 
 (defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
-    ; (j/call app :use (csrf-handler template "main" view:error))
     (web/reset-routes app)
+    ; (j/call app :use (csrf-handler template "main")) ; view:simple-message
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
     (j/call app :get "/" (fn [req res] (homepage req res template)))
-    (setup-auth app)
+    (setup-auth app) ; optional argument `sign-out-redirect-url` which defaults to "/".
     (setup-email-based-auth app template "main")
     ; from-email defaults to env var FROM_EMAIL
     ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
