@@ -327,7 +327,7 @@ This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as 
 #### Tracebacks
 
 If an error occurs in a running server in production it can be useful to have the traceback emailed to somebody.
-You can tell Sitefox to email all tracebacks using `install-traceback-emailer`:
+You can tell Sitefox to email all tracebacks using `install-traceback-emailer` from `sitefox.tracebacks`:
 
 ```
 (install-traceback-emailer (env "ADMIN_EMAIL"))
