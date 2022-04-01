@@ -9,7 +9,6 @@
     [promesa.core :as p]
     [sitefox.html :refer [render render-into]]
     [sitefox.web :as web]
-    [sitefox.ui :refer [log]]
     [sitefox.db :refer [kv]]
     [sitefox.util :refer [env]]
     [sitefox.auth :refer [timestamp-expired? encrypt-for-transit decrypt-for-transit hash-password]]
@@ -162,9 +161,6 @@
           user (.get users-table user-id)]
     (cb nil user)))
 
-(defn user-from-req [req]
-  (j/get-in req [:session :passport :user]))
-
 (defn get-user-by-key
   "Get a user object from the user's kv table. The `auth-key` is the lookup token such as email or username."
   [auth-key-type auth-key]
@@ -209,14 +205,14 @@
           invalid #js {:message "Invalid email or password."}]
     (cond
       (nil? user) (cb nil false invalid)
-      (not= (hash-password password salt) hashed-password) (cb nil false invalid)
+      (not= (first (hash-password password salt)) hashed-password) (cb nil false invalid)
       :else (cb nil user))))
 
 ; ***** route handling functions ***** ;
 
 ; sign in middleware ;
 
-(defn middleware:sign-in [req res done]
+(defn middleware:sign-in-submit [req res done]
   (if (is-post? req)
     ((passport/authenticate "local"
                             (fn [err user info]
@@ -230,7 +226,7 @@
 
 (defn make-middleware:sign-in-redirect [post-sign-in-redirect]
   (fn [req res done]
-    (if (user-from-req req)
+    (if (j/get req :user)
       (.redirect res (or post-sign-in-redirect "/"))
       (done))))
 
@@ -331,7 +327,7 @@
                                          sign-up-email-component email-subject from-address]}]]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
   (j/call app :use "/auth/sign-in"
-          middleware:sign-in
+          middleware:sign-in-submit
           (make-middleware:sign-in-redirect post-sign-in-redirect)
           (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
   (j/call app :use "/auth/sign-up"
@@ -349,8 +345,8 @@
           middleware:verify-sign-up
           middleware:finalize-sign-up
           (fn [req res]
-            (print "user" (user-from-req req))
-            (let [view-component (if (user-from-req req)
+            ; TODO: redirect the user instead
+            (let [view-component (if (j/get req :user)
                                    component:sign-up-success
                                    component:simple-message)]
               (render-into-template res template selector [view-component req])))))
@@ -358,15 +354,15 @@
 ; user-space calls
 
 (defn homepage [req res template]
-  (let [user (user-from-req req)]
+  (p/let [user (j/get req :user)]
     (render-into-template
       res template "main"
       [:div
-       [:h1 "Auth demo"]
+       [:h3 "Homepage"]
        (if user
          [:<>
-           [:p "Signed in as " (j/get-in user [:auth :email])]
-           [:p [:a {:href "/auth/sign-out"} "Sign out"]]]
+          [:p "Signed in as " (j/get-in user [:auth :email])]
+          [:p [:a {:href "/auth/sign-out"} "Sign out"]]]
          [:p [:a {:href "/auth/sign-in"} "Sign in"]])])))
 
 (defn setup-routes [app]
@@ -374,7 +370,6 @@
     (web/reset-routes app)
     ; (j/call app :use (csrf-handler template "main")) ; view:simple-message
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
-    (j/call app :get "/" (fn [req res] (homepage req res template)))
     (setup-auth app) ; optional argument `sign-out-redirect-url` which defaults to "/".
     (setup-email-based-auth app template "main")
     ; from-email defaults to env var FROM_EMAIL
@@ -385,7 +380,8 @@
                                {:post-sign-in-redirect "/"
                                 :sign-up-email-component component:sign-up-email
                                 :email-subject "Verify your email"
-                                :from-address "no-reply@jones.com"})))
+                                :from-address "no-reply@jones.com"})
+    (j/call app :get "/" (fn [req res] (homepage req res template)))))
 
 (defn main! []
   (p/let [[app host port] (web/start)]
