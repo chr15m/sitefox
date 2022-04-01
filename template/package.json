@@ -13,6 +13,7 @@
   },
   "scripts": {
     "serve": "DEV=1 nbb --classpath ${VIRTUAL_ENV:=.}/node_modules/sitefox/src/ server.cljs",
-    "serve-live": "nbb --classpath ${VIRTUAL_ENV:=.}.node_modules/sitefox/src/ server.cljs"
+    "serve-live": "nbb --classpath ${VIRTUAL_ENV:=.}/node_modules/sitefox/src/ server.cljs",
+    "repl": "DEV=1 nbb --classpath ${VIRTUAL_ENV:=.}/node_modules/sitefox/src/ nrepl-server :port 1338"
   }
 }
