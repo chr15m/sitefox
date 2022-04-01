@@ -12,7 +12,7 @@
     [sitefox.ui :refer [log]]
     [sitefox.db :refer [kv]]
     [sitefox.util :refer [env]]
-    [sitefox.auth :refer [make-hmac-token timestamp-expired?]]
+    [sitefox.auth :refer [timestamp-expired? encrypt-for-transit decrypt-for-transit hash-password]]
     [sitefox.mail :refer [send-email]]
     [sitefox.logging :refer [bind-console-to-file]]))
 
@@ -35,6 +35,10 @@
                :class (j/get message :class)}
           (j/get message :message)]))]))
 
+(defn component:simple-message [req]
+  [:section.auth
+   [component:messages req]])
+
 ; sign in view ;
 
 (defn component:sign-in-form [req]
@@ -47,6 +51,7 @@
       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
       [component:error errors :email]
       [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)}]]
+      [component:error errors :password]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
       [component:messages req]
       [:div.actions
@@ -62,13 +67,19 @@
         data (j/get req :body)
         errors (j/get req :errors)]
     [:section.auth
-     [:p "Enter your email to sign up."]
+     [:p "Enter your email and desired password to sign up."]
      [:form {:method "POST"}
       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
       [component:error errors :email]
       [:p "Verify email:"]
       [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (j/get data :email2)}]]
       [component:error errors :email2]
+      [:p "Enter your desired password:"]
+      [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)}]]
+      [component:error errors :password]
+      [:p "Verify password:"]
+      [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)}]]
+      [component:error errors :password2]
       [component:messages req]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
       [:div.actions
@@ -91,7 +102,31 @@
      [:p "Please check your email and follow the activation link to verify your account."]
      [:p "Don't forget to check your spam folder if you can't find the activation email."]]))
 
+(defn component:sign-up-success [_req]
+  [:section.auth
+   [:h3 "Sign up complete"]
+   [:p "You are all signed up and signed in. Welcome to the site."]])
+
 ; forgot password view ;
+
+(defn component:change-password-form [req]
+  (let [csrf-token (j/call req :csrfToken)
+        errors (j/get req :errors)
+        data (j/get req :body)]
+    [:section.auth
+     [:p "Please enter your desired password to complete your signup."]
+     [:form {:method "POST"}
+      [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)}]]
+      [component:error errors :password]
+      [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)}]]
+      [component:error errors :password2]
+      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [component:messages req]
+      [:div.actions
+       [:ul
+        [:li [:a {:href "/auth/sign-up"} "Sign in"]]
+        [:li [:a {:href "/auth/sign-up"} "Sign up"]]]
+       [:button.primary {:type "submit"} "Update password"]]]]))
 
 ;***** non-auth functions *****;
 
@@ -119,12 +154,13 @@
 ;***** user data functions *****;
 
 (defn serialize-user [user cb]
-  (log "serialize-user" user)
-  (cb nil user))
+  (cb nil #js {:id (j/get user :id)}))
 
 (defn deserialize-user [user cb]
-  (log "deserialize-user" user)
-  (cb nil user))
+  (p/let [users-table (kv "users")
+          user-id (j/get user :id)
+          user (.get users-table user-id)]
+    (cb nil user)))
 
 (defn user-from-req [req]
   (j/get-in req [:session :passport :user]))
@@ -135,8 +171,7 @@
   (p/let [user-ids-table (kv "user-ids")
           users-table (kv "users")
           user-id (.get user-ids-table (str (name auth-key-type) ":" auth-key))
-          user (when user-id
-                 (.get users-table user-id))]
+          user (when user-id (.get users-table user-id))]
     (when user
       (j/assoc! user :id user-id))))
 
@@ -148,7 +183,7 @@
           user-ids-table (kv "user-ids")
           users-table (kv "users")
           user-id (str (random-uuid))
-          user-data (j/assoc user-data :id user-id)]
+          user-data (j/assoc! user-data :id user-id)]
     (.set user-ids-table (str (name auth-key-type) ":" auth-key) user-id)
     (.set users-table user-id user-data)
     user-data))
@@ -156,26 +191,25 @@
 (defn get-or-create-user-by-key
   "Try to find a user objet by it's `auth-key` (i.e. username/email) and create a new user with that `auth-key` if it can't be found."
   [auth-key-type auth-key & [user-data]]
-  (or (get-user-by-key auth-key-type auth-key)
-      (create-user auth-key-type auth-key (or user-data #js {}))))
+  (p/let [existing-user (get-user-by-key auth-key-type auth-key)]
+    (or existing-user (create-user auth-key-type auth-key user-data))))
 
 (defn save-user
   "Persist a user object back into the users kv table, overwriting the existing object."
   [user-data]
   (p/let [user-id (j/get user-data :id)
           users-table (kv "users")
-          user-data (j/assoc user-data :id user-id)]
+          user-data (j/assoc! user-data :id user-id)]
     (.set users-table user-id user-data)))
-
 
 (defn verify-kv-email-user [email password cb]
   (p/let [user (get-user-by-key "email" email)
           hashed-password (j/get-in user [:auth :password])
-          ;auth (j/get-in user [:auth :email])
+          salt (j/get-in user [:auth :salt])
           invalid #js {:message "Invalid email or password."}]
     (cond
       (nil? user) (cb nil false invalid)
-      (not= password hashed-password) (cb nil false invalid)
+      (not= (hash-password password salt) hashed-password) (cb nil false invalid)
       :else (cb nil user))))
 
 ; ***** route handling functions ***** ;
@@ -202,11 +236,14 @@
 
 ; sign up middleware ;
 
-(defn middleware:sign-up [req _res done]
+(defn middleware:sign-up-submit [req _res done]
   (if (is-post? req)
     (p/let [fields {:email ["required" "email"]
-                    :email2 ["required" "email" "same:email"]}
-            warnings {:email2.same "Email addresses must match."}
+                    :email2 ["required" "email" "same:email"]
+                    :password ["required"]
+                    :password2 ["required" "same:password"]}
+            warnings {:email2.same "Email addresses must match."
+                      :password2.same "Passwords must match."}
             validation-errors (validate-post-data req fields warnings)]
       (when validation-errors
         (j/assoc! req :errors validation-errors))
@@ -221,11 +258,15 @@
         (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
         (p/let [hostname (j/get req :hostname)
                 email-address (j/get data :email)
+                password (j/get data :password)
                 from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
                 email-view-component (or email-view-component component:sign-up-email)
                 time-stamp (-> (js/Date.) .getTime)
-                token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" hostname email-address)
-                verify-url (str (web/build-absolute-uri req "/auth/verify-sign-up") "?h=" token "&e=" email-address "&t=" time-stamp)
+                packet {:e email-address
+                        :p password
+                        :t time-stamp}
+                encrypted-packet (encrypt-for-transit (-> packet clj->js js/JSON.stringify))
+                verify-url (str (web/build-absolute-uri req "/auth/verify-sign-up") "?v=" encrypted-packet)
                 email-html (render [email-view-component req verify-url])
                 email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
                                                        :uppercaseHeadings false})
@@ -237,29 +278,39 @@
                                         :html email-html)]
           (print "mail-result" mail-result)
           (print "verify-url" verify-url)
-          (j/assoc-in! req [:auth :sign-up-email-sent] true))
-        (done)))))
+          (j/assoc-in! req [:auth :sign-up-email-sent] true)))
+      (done))))
 
 (defn middleware:verify-sign-up [req _res done]
-  (p/let [q (j/get req :query)
-          hostname (j/get req :hostname)
-          token-supplied (j/get q :h)
-          time-stamp (js/parseInt (j/get q :t))
-          email-address (j/get q :e)
-          token (make-hmac-token (env "SECRET" "DEVMODE") 8 (str time-stamp) "sign-up" hostname email-address)
-          token-valid? (= token-supplied token)
-          token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))
-          message (cond
-                    ; check tokens match
-                    (not token-valid?)
-                    {:message "The verification link has been tampered with. Please try to sign up again."
-                     :class :error}
-                    token-expired?
-                    {:message "This verification link has expired. Please try to sign up again."
-                     :class :error})]
-    (j/assoc-in! req [:auth :sign-up-verification] {:verified (and token-valid? (not token-expired?))
-                                                    :message message})
-    (done)))
+  (p/catch
+    (p/let [encrypted-packet (j/get-in req [:query :v])
+            packet (decrypt-for-transit encrypted-packet)
+            q (js/JSON.parse packet)
+            time-stamp (j/get q :t)
+            token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))]
+      (if token-expired?
+        (j/assoc-in! req [:auth :messages]
+                     (clj->js [{:message "This verification link has expired. Please try to sign up again."
+                                :class :error}]))
+        (j/assoc-in! req [:auth :sign-up-data] (when (not token-expired?) q)))
+      (done))
+    (fn [e]
+      (print e)
+      (j/assoc-in! req [:auth :messages] (clj->js [{:message "There was a problem verifying the link. Please try again."}]))
+      (done))))
+
+(defn middleware:finalize-sign-up [req _res done]
+  (let [sign-up-data (j/get-in req [:auth :sign-up-data])]
+    (if sign-up-data
+      (p/let [password (j/get sign-up-data :p)
+              email (j/get sign-up-data :e)
+              [hashed-password salt] (hash-password password)
+              user-data (clj->js {:auth {:email email
+                                         :password hashed-password
+                                         :salt salt}})
+              user (get-or-create-user-by-key :email email user-data)]
+        (j/call req :logIn user done))
+      (done))))
 
 ; ***** route installing functions ***** ;
 
@@ -285,8 +336,8 @@
           (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
   (j/call app :use "/auth/sign-up"
           ; TODO: handle the case where the user already exists
-          ; (maybe just send them the verification email anyway any make it idempotent?
-          middleware:sign-up
+          ; (maybe just send them the verification email anyway and make it idempotent?
+          middleware:sign-up-submit
           (make-middleware:sign-up-email sign-up-email-component email-subject from-address)
           (fn [req res]
             (let [sign-up-email-sent (j/get-in req [:auth :sign-up-email-sent])
@@ -296,14 +347,13 @@
               (render-into-template res template "main" [view-component req]))))
   (j/call app :use "/auth/verify-sign-up"
           middleware:verify-sign-up
-          ; TODO: handle invalid verification by showing the user view:simple-message
-          ;middleware:sign-up-verify-failed
-          ; TODO: handle change password form submission, saving user
-          ;middleware:update-password
-          ; TODO: show change-password form
-          ;middleware:change-password
-          ; TODO: always show view:simple-message at the end?
-          (fn [req res] (render-into-template res template selector [component:sign-in-form req]))))
+          middleware:finalize-sign-up
+          (fn [req res]
+            (print "user" (user-from-req req))
+            (let [view-component (if (user-from-req req)
+                                   component:sign-up-success
+                                   component:simple-message)]
+              (render-into-template res template selector [view-component req])))))
 
 ; user-space calls
 
@@ -315,7 +365,7 @@
        [:h1 "Auth demo"]
        (if user
          [:<>
-           [:p "Signed in as " (pr-str user)]
+           [:p "Signed in as " (j/get-in user [:auth :email])]
            [:p [:a {:href "/auth/sign-out"} "Sign out"]]]
          [:p [:a {:href "/auth/sign-in"} "Sign in"]])])))
 
@@ -334,7 +384,7 @@
     #_ (setup-email-based-auth app template "main"
                                {:post-sign-in-redirect "/"
                                 :sign-up-email-component component:sign-up-email
-                                :email-subject "Welcome to thingo!"
+                                :email-subject "Verify your email"
                                 :from-address "no-reply@jones.com"})))
 
 (defn main! []
