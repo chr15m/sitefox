@@ -44,44 +44,46 @@
     (fn [res _err]
       (let [secret (env "SECRET" "DEVMODE")
             k (scryptSync secret "encrypt-for-transit" 24)
-            iv (randomFillSync (js/Uint8Array. 16))
+            iv (randomBytes 16)
             encoded (-> materials clj->js js/JSON.stringify)]
         (when (= secret "DEVMODE") (js/console.error "Warning: env var SECRET is not set."))
         (let [cipher (createCipheriv "aes-192-cbc" k iv)
-              assembled (str
-                          (-> iv js/Buffer.from (.toString "hex"))
-                          (.update cipher encoded "utf8" "hex")
-                          (.final cipher "hex"))]
-          (res assembled))))))
+              assembled (js/Buffer.concat
+                          #js [iv
+                               (.update cipher encoded "utf8")
+                               (.final cipher)])]
+          (res (.toString assembled "base64")))))))
 
 (defn decrypt-for-transit
   "Decrypts a piece of data using symmetric key cryptography and the server's own secret."
   {:test (fn []
            (async done
-                  (p/catch
-                    (p/let [vi "some string of data"
-                            vx (encrypt-for-transit vi)
-                            vo (decrypt-for-transit vx)
-                            vi2 (clj->js {:something 42 :h [1 2 4]})
-                            vx2 (encrypt-for-transit vi2)
-                            vo2 (decrypt-for-transit vx2)]
-                      (is (= vi vo))
-                      (is (= (js->clj vi2) (js->clj vo2)))
-                      ; test failing decrypt
-                      (decrypt-for-transit (.slice vo2 1)))
-                    (fn []
-                      (done)))))}
+                  (p/let [vi "some string of data"
+                          vx (encrypt-for-transit vi)
+                          vo (decrypt-for-transit vx)
+                          vi2 (clj->js {:something 42 :h [1 2 4]})
+                          vx2 (encrypt-for-transit vi2)
+                          vo2 (decrypt-for-transit vx2)]
+                    (is (= vi vo))
+                    (is (= (js->clj vi2) (js->clj vo2)))
+                    (p/catch
+                      (p/let [vi "something"
+                              vx (encrypt-for-transit vi)]
+                        ; test failing decrypt
+                        (decrypt-for-transit (.slice vx 1)))
+                      (fn []
+                        (done))))))}
   [encrypted]
   (js/Promise.
     (fn [res _err]
       (let [secret (env "SECRET" "DEVMODE")
             k (scryptSync secret "encrypt-for-transit" 24)
-            iv-src (.slice encrypted 0 32)
-            msg (.slice encrypted 32)
-            iv (js/Buffer.from iv-src "hex")
+            data (js/Buffer.from encrypted "base64")
+            iv (.slice data 0 16)
+            msg (.slice data 16)
             cipher (createDecipheriv "aes-192-cbc" k iv)
             raw (str
-                  (.update cipher msg "hex" "utf8")
+                  (.update cipher msg "utf8")
                   (.final cipher "utf8"))
             decoded (-> raw js/JSON.parse)]
         (res decoded)))))
