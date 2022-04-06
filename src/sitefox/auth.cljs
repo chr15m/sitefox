@@ -52,7 +52,11 @@
                           #js [iv
                                (.update cipher encoded "utf8")
                                (.final cipher)])]
-          (res (.toString assembled "base64")))))))
+          (-> assembled
+              (.toString "base64")
+              (.replaceAll "/" "_")
+              (.replaceAll "+" "-")
+              res))))))
 
 (defn decrypt-for-transit
   "Decrypts a piece of data using symmetric key cryptography and the server's own secret."
