@@ -113,8 +113,10 @@
         errors (j/get req :errors)
         data (j/get req :body)]
     [:section.auth
-     [:p "Please enter your desired password to complete your signup."]
+     [:p "Please enter a new password."]
      [:form {:method "POST"}
+      [:p [:input.fit {:name "current" :type "password" :placeholder "Current password" :default-value (j/get data :current)}]]
+      [component:error errors :current]
       [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)}]]
       [component:error errors :password]
       [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)}]]
@@ -256,7 +258,7 @@
                 email-address (j/get data :email)
                 password (j/get data :password)
                 from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
-                email-view-component (or email-view-component component:sign-up-email)
+                email-view-component email-view-component
                 time-stamp (-> (js/Date.) .getTime)
                 packet {:e email-address
                         :p password
@@ -290,8 +292,8 @@
                                 :class :error}]))
         (j/assoc-in! req [:auth :sign-up-data] (when (not token-expired?) q)))
       (done))
-    (fn [e]
-      (print e)
+    (fn [_e]
+      (js/console.error _e)
       (j/assoc-in! req [:auth :messages] (clj->js [{:message "There was a problem verifying the link. Please try again."}]))
       (done))))
 
@@ -324,22 +326,25 @@
 
 (defn setup-email-based-auth [app template selector
                               & [{:keys [post-sign-in-redirect
-                                         sign-up-email-component email-subject from-address]}]]
+                                         sign-in-form-component
+                                         sign-up-email-component sign-up-email-subject sign-up-from-address
+                                         sign-up-form-component sign-up-form-done-component sign-up-success-component
+                                         simple-message-component]}]]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
   (j/call app :use "/auth/sign-in"
           middleware:sign-in-submit
           (make-middleware:sign-in-redirect post-sign-in-redirect)
-          (fn [req res] (render-into-template res template selector [component:sign-in-form req])))
+          (fn [req res] (render-into-template res template selector [(or sign-in-form-component component:sign-in-form) req])))
   (j/call app :use "/auth/sign-up"
           ; TODO: handle the case where the user already exists
           ; (maybe just send them the verification email anyway and make it idempotent?
           middleware:sign-up-submit
-          (make-middleware:sign-up-email sign-up-email-component email-subject from-address)
+          (make-middleware:sign-up-email (or sign-up-email-component component:sign-up-email) sign-up-email-subject sign-up-from-address)
           (fn [req res]
             (let [sign-up-email-sent (j/get-in req [:auth :sign-up-email-sent])
                   view-component (if sign-up-email-sent
-                                   component:sign-up-form-done
-                                   component:sign-up-form)]
+                                   (or sign-up-form-done-component component:sign-up-form-done)
+                                   (or sign-up-form-component component:sign-up-form))]
               (render-into-template res template "main" [view-component req]))))
   (j/call app :use "/auth/verify-sign-up"
           middleware:verify-sign-up
@@ -347,8 +352,8 @@
           (fn [req res]
             ; TODO: redirect the user instead
             (let [view-component (if (j/get req :user)
-                                   component:sign-up-success
-                                   component:simple-message)]
+                                   (or sign-up-success-component component:sign-up-success)
+                                   (or simple-message-component component:simple-message))]
               (render-into-template res template selector [view-component req])))))
 
 ; user-space calls
@@ -373,14 +378,19 @@
     (setup-auth app) ; optional argument `sign-out-redirect-url` which defaults to "/".
     (setup-email-based-auth app template "main")
     ; from-email defaults to env var FROM_EMAIL
-    ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
     ; email-subject defaults to "req.hostname sign-up verification"
     ; from-address defaults to no-reply@req.hostname
+    ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
     #_ (setup-email-based-auth app template "main"
                                {:post-sign-in-redirect "/"
+                                :sign-in-form-component component:sign-in-form
                                 :sign-up-email-component component:sign-up-email
-                                :email-subject "Verify your email"
-                                :from-address "no-reply@jones.com"})
+                                :sign-up-email-subject "Please verify your email"
+                                :sign-up-from-address "no-reply@example.com"
+                                :sign-up-form-component component:sign-up-form
+                                :sign-up-form-done-component component:sign-up-form-done
+                                :sign-up-success-component component:sign-up-success
+                                :simple-message-component component:simple-message})
     (j/call app :get "/" (fn [req res] (homepage req res template)))))
 
 (defn main! []
