@@ -1,6 +1,6 @@
 (ns sitefox.html
   (:require
-    [cljs.test :refer [is]]
+   [clojure.test :refer [is]]
    [applied-science.js-interop :as j]
    [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
    [sitefox.deps :refer [parse-html]]))

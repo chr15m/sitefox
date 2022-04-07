@@ -1,6 +1,6 @@
 (ns sitefox.auth
   (:require
-    [cljs.test :refer-macros [is async]]
+    [clojure.test :refer-macros [is async]]
     [promesa.core :as p]
     ["crypto" :refer [createHash createHmac randomBytes pbkdf2Sync scryptSync createCipheriv createDecipheriv]]
     [sitefox.util :refer [env]]))

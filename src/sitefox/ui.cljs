@@ -1,6 +1,6 @@
 (ns sitefox.ui
   (:require
-    [cljs.test :refer [is]]))
+    [clojure.test :refer [is]]))
 
 (defn log [& args] (apply js/console.log (clj->js args)) (first args))
 
