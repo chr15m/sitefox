@@ -36,6 +36,11 @@
                         result)))
     e))
 
+(defn is-post?
+  "Check whether an express request uses the POST method."
+  [req]
+  (= (aget req "method") "POST"))
+
 (defn add-default-middleware
   "Set up default express middleware for:
 
