@@ -229,10 +229,10 @@
      req res done)
     (done)))
 
-(defn make-middleware:sign-in-redirect [post-sign-in-redirect]
+(defn make-middleware:signed-in-redirect [redirect-url]
   (fn [req res done]
     (if (j/get req :user)
-      (.redirect res (or post-sign-in-redirect "/"))
+      (.redirect res (or redirect-url "/"))
       (done))))
 
 ; sign up middleware ;
@@ -326,15 +326,16 @@
     (j/assoc! passport :_sitefox_setup_auth true)))
 
 (defn setup-email-based-auth [app template selector
-                              & [{:keys [post-sign-in-redirect
+                              & [{:keys [sign-in-redirect
                                          sign-in-form-component
+                                         sign-up-redirect
                                          sign-up-email-component sign-up-email-subject sign-up-from-address
-                                         sign-up-form-component sign-up-form-done-component sign-up-success-component
+                                         sign-up-form-component sign-up-form-done-component
                                          simple-message-component]}]]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
   (j/call app :use "/auth/sign-in"
           middleware:sign-in-submit
-          (make-middleware:sign-in-redirect post-sign-in-redirect)
+          (make-middleware:signed-in-redirect sign-in-redirect)
           (fn [req res] (render-into-template res template selector [(or sign-in-form-component component:sign-in-form) req])))
   (j/call app :use "/auth/sign-up"
           ; TODO: handle the case where the user already exists
@@ -350,12 +351,8 @@
   (j/call app :use "/auth/verify-sign-up"
           middleware:verify-sign-up
           middleware:finalize-sign-up
-          (fn [req res]
-            ; TODO: redirect the user instead
-            (let [view-component (if (j/get req :user)
-                                   (or sign-up-success-component component:sign-up-success)
-                                   (or simple-message-component component:simple-message))]
-              (render-into-template res template selector [view-component req])))))
+          (make-middleware:signed-in-redirect sign-up-redirect)
+          (fn [req res] (render-into-template res template selector [(or simple-message-component component:simple-message) req]))))
 
 ; user-space calls
 
@@ -383,14 +380,14 @@
     ; from-address defaults to no-reply@req.hostname
     ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
     #_ (setup-email-based-auth app template "main"
-                               {:post-sign-in-redirect "/"
+                               {:sign-in-redirect "/"
                                 :sign-in-form-component component:sign-in-form
+                                :sign-up-redirect "/"
                                 :sign-up-email-component component:sign-up-email
                                 :sign-up-email-subject "Please verify your email"
                                 :sign-up-from-address "no-reply@example.com"
                                 :sign-up-form-component component:sign-up-form
                                 :sign-up-form-done-component component:sign-up-form-done
-                                :sign-up-success-component component:sign-up-success
                                 :simple-message-component component:simple-message})
     (j/call app :get "/" (fn [req res] (homepage req res template)))))
 
