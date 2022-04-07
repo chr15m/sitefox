@@ -23,8 +23,8 @@
        (if user
          [:<>
           [:p "Signed in as " (j/get-in user [:auth :email])]
-          [:p [:a {:href "/auth/sign-out"} "Sign out"]]]
-         [:p [:a {:href "/auth/sign-in"} "Sign in"]])])))
+          [:p [:a {:href (web/get-named-route req "auth:sign-out")} "Sign out"]]]
+         [:p [:a {:href (web/get-named-route req "auth:sign-in")} "Sign in"]])])))
 
 (defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
@@ -33,10 +33,6 @@
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
     (auth/setup-auth app) ; optional argument `sign-out-redirect-url` which defaults to "/".
     (auth/setup-email-based-auth app template "main")
-    ; from-email defaults to env var FROM_EMAIL
-    ; email-subject defaults to "req.hostname sign-up verification"
-    ; from-address defaults to no-reply@req.hostname
-    ; sign-up-email-component defaults to component:sign-up-email and takes two args: `req` and `verify-url`
     #_ (setup-email-based-auth app template "main"
                                {:sign-in-redirect "/"
                                 :sign-in-form-component component:sign-in-form

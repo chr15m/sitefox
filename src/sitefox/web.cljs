@@ -141,3 +141,14 @@
           (> (aget path "length") 1))
       (.redirect res 301 (str (.slice path 0 -1) (.slice url (aget path "length"))))
       (n))))
+
+(defn name-route
+  "Attach a name to a route that can be recalled with `get-named-route`."
+  [app route route-name]
+  (j/assoc-in! app [:named-routes route-name] route)
+  route)
+
+(defn get-named-route
+  "Retrieve a route that has previously been named."
+  [req route-name]
+  (j/get-in req [:app :named-routes route-name]))
