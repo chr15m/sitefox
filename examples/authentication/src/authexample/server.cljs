@@ -152,6 +152,9 @@
     (when (not validated)
       validation-errors)))
 
+(defn add-messages! [req messages]
+  (j/update-in! req [:auth :messages] #(.concat (or % #js []) (clj->js messages))))
+
 ;***** user data functions *****;
 
 (defn serialize-user [user cb]
@@ -280,22 +283,20 @@
       (done))))
 
 (defn middleware:verify-sign-up [req _res done]
-  (p/catch
-    (p/let [encrypted-packet (j/get-in req [:query :v])
-            packet (decrypt-for-transit encrypted-packet)
-            q (js/JSON.parse packet)
-            time-stamp (j/get q :t)
-            token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))]
-      (if token-expired?
-        (j/assoc-in! req [:auth :messages]
-                     (clj->js [{:message "This verification link has expired. Please try to sign up again."
-                                :class :error}]))
-        (j/assoc-in! req [:auth :sign-up-data] (when (not token-expired?) q)))
-      (done))
-    (fn [_e]
-      (js/console.error _e)
-      (j/assoc-in! req [:auth :messages] (clj->js [{:message "There was a problem verifying the link. Please try again."}]))
-      (done))))
+  (p/let [encrypted-packet (j/get-in req [:query :v])
+          packet (decrypt-for-transit encrypted-packet)
+          q (js/JSON.parse packet)
+          time-stamp (j/get q :t)
+          token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))]
+    (cond
+      (nil? q)
+      (add-messages! req [{:message "There was a problem verifying the link. Please try again."}])
+      token-expired?
+      (add-messages! req {:message "This verification link has expired. Please try to sign up again."
+                          :class :error})
+      :else
+      (j/assoc-in! req [:auth :sign-up-data] (when (not token-expired?) q)))
+    (done)))
 
 (defn middleware:finalize-sign-up [req _res done]
   (let [sign-up-data (j/get-in req [:auth :sign-up-data])]
