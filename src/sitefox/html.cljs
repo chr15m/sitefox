@@ -36,3 +36,14 @@
     (when (not el) (throw (js/Error. (str "HTML element not found: \"" selector "\""))))
     (j/call el :set_content rendered)
     (.toString t)))
+
+(defn direct-to-template
+  "Render `selector` `component` Reagent pairs into the HTML `template` string and use the express `res` to send the resulting HTML to the client."
+  [res template & selector-component-pairs]
+  (.send res
+         (reduce
+           (fn [html [selector component]]
+             (render-into html selector component))
+           template
+           (partition 2 selector-component-pairs))))
+
