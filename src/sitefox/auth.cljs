@@ -183,7 +183,7 @@
     user-data))
 
 (defn get-or-create-user-by-key
-  "Try to find a user objet by it's `auth-key` (i.e. username/email) and create a new user with that `auth-key` if it can't be found."
+  "Try to find a user object by it's `auth-key` (i.e. username/email) and create a new user with that `auth-key` if it can't be found."
   [auth-key-type auth-key & [user-data]]
   (p/let [existing-user (get-user-by-key auth-key-type auth-key)]
     (or existing-user (create-user auth-key-type auth-key user-data))))
@@ -254,7 +254,6 @@
                 email-address (j/get data :email)
                 password (j/get data :password)
                 from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
-                email-view-component email-view-component
                 time-stamp (-> (js/Date.) .getTime)
                 packet {:e email-address
                         :p password
@@ -277,7 +276,7 @@
 
 (defn middleware:verify-sign-up [req _res done]
   (p/let [encrypted-packet (j/get-in req [:query :v])
-          packet (decrypt-for-transit encrypted-packet)
+          packet (when encrypted-packet (decrypt-for-transit encrypted-packet))
           q (js/JSON.parse packet)
           time-stamp (j/get q :t)
           token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))]
@@ -288,7 +287,7 @@
       (add-messages! req {:message "This verification link has expired. Please try to sign up again."
                           :class :error})
       :else
-      (j/assoc-in! req [:auth :sign-up-data] (when (not token-expired?) q)))
+      (j/assoc-in! req [:auth :sign-up-data] q))
     (done)))
 
 (defn middleware:finalize-sign-up [req _res done]
