@@ -194,7 +194,8 @@
   (p/let [user-id (j/get user-data :id)
           users-table (kv "users")
           user-data (j/assoc! user-data :id user-id)]
-    (.set users-table user-id user-data)))
+    (.set users-table user-id user-data)
+    user-data))
 
 (defn verify-kv-email-user [email password cb]
   (p/let [user (get-user-by-key "email" email)
