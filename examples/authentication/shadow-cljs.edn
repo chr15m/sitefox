@@ -8,4 +8,8 @@
                    :modules {:server {:init-fn authexample.server/main!}}
                    :release {:output-to "server.js"
                              :output-dir "build"}
-                   :devtools {:after-load authexample.server/reload!}}}}
+                   :devtools {:after-load authexample.server/reload!}}
+          :test {:target :node-test
+                 :output-to "tests.js"
+                 :ns-regexp "sitefox.*$"
+                 :autorun true}}}
