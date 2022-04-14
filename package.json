@@ -1,6 +1,6 @@
 {
   "name": "sitefox",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Backend web framework for Node + ClojureScript",
   "author": "Chris McCormick <chis@mccormick.cx>",
   "homepage": "https://github.com/chr15m/sitefox",
@@ -25,6 +25,6 @@
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.cljs",
-    "docs": "( echo '# Readme'; cat README.md ) > codox-readme.md && clojure -X:codox"
+    "docs": "nbb bin/generate-docs.cljs"
   }
 }
