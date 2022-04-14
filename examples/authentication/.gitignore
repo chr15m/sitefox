@@ -2,5 +2,7 @@ build
 .shadow-cljs
 database.sqlite
 logs
+tests.js
 server.js
 devserver.js
+.clj-kondo/.cache
