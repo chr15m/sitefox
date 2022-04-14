@@ -304,6 +304,100 @@
         (j/call req :logIn user done))
       (done))))
 
+; reset password middleware ;
+
+(defn middleware:reset-password-email-submit [req _res done]
+  (if (is-post? req)
+    (p/let [fields {:email ["required" "email"]}
+            validation-errors (validate-post-data req fields)]
+      (when validation-errors
+        (j/assoc! req :errors validation-errors))
+      (done))
+    (done)))
+
+(defn make-middleware:reset-password-send-email [reset-password-email-component email-subject from-address]
+  (fn [req _res done]
+    (p/let [data (j/get req :body)
+            validation-errors (j/get req :errors)]
+      (when (and (is-post? req) (not validation-errors))
+        (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
+        (p/let [hostname (j/get req :hostname)
+                email-address (j/get data :email)
+                from-address (or from-address (env "FROM_EMAIL" (str "no-reply@" hostname)))
+                time-stamp (-> (js/Date.) .getTime)
+                packet {:e email-address
+                        :t time-stamp}
+                encrypted-packet (encrypt-for-transit (-> packet clj->js js/JSON.stringify))
+                verify-url (str (build-absolute-uri req (get-named-route req "auth:reset-password-form")) "?v=" encrypted-packet)
+                email-html (render [reset-password-email-component req verify-url])
+                email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
+                                                       :uppercaseHeadings false})
+                email-subject (or email-subject (str hostname " reset password link"))
+                mail-result (send-email email-address
+                                        from-address
+                                        email-subject
+                                        :text email-text
+                                        :html email-html)]
+          (print "mail-result" mail-result)
+          (print "verify-url" verify-url)
+          (j/assoc-in! req [:auth :sign-up-email-sent] true)))
+      (done))))
+
+(defn middleware:verify-reset-password [req _res done]
+  ; skip verification if the user is already authenticated
+  (if (j/get req :user)
+    (done)
+    (p/let [encrypted-packet (j/get-in req [:query :v])
+            packet (when encrypted-packet (decrypt-for-transit encrypted-packet))
+            q (js/JSON.parse packet)
+            time-stamp (j/get q :t)
+            token-expired? (timestamp-expired? time-stamp (* 1000 60 60 24))
+            email (j/get q :e)
+            user (get-user-by-key :email email)]
+      (cond
+        (nil? q)
+        (add-messages! req [{:message "There was a problem verifying the link. Please try again."}])
+        token-expired?
+        (add-messages! req {:message "This password reset link has expired. Please try to again."
+                            :class :error})
+        (nil? user)
+        (add-messages! req {:message (str "No user exists with the email " email ".")})
+        :else
+        (j/assoc-in! req [:auth :reset-password-data] q))
+      (done))))
+
+(defn middleware:reset-password-submit [req _res done]
+  (if (is-post? req)
+    (p/let [fields {:password ["required"]
+                    :password2 ["required" "same:password"]}
+            warnings {:password2.same "Passwords must match."}
+            validation-errors (validate-post-data req fields warnings)]
+      (when validation-errors
+        (j/assoc! req :errors validation-errors))
+      (done))
+    (done)))
+
+(defn middleware:update-password [req _res done]
+  (p/let [reset-password-data (j/get-in req [:auth :reset-password-data])
+          password (j/get-in req [:body :password])
+          user (or
+                 (j/get req :user)
+                 (get-user-by-key :email (j/get reset-password-data :e)))]
+    (if password
+      (if user
+        (p/let [email (j/get-in user [:auth :email])
+                [hashed-password salt] (hash-password password)
+                user (j/assoc! user :auth (clj->js {:email email
+                                                    :password hashed-password
+                                                    :salt salt}))
+                user (save-user user)]
+          (j/call req :logIn user done))
+        (do
+          (add-messages! req {:message "No user with this email address exists. Please sign up instead."
+                              :class :error}) 
+          (done)))
+      (done))))
+
 ;***** views *****;
 
 (defn component:error [errors k]
@@ -341,8 +435,8 @@
       [:div.actions
        [:ul
         [:li [:a {:href (get-named-route req "auth:sign-up")} "Sign up"]]
-        (when-let [forgot-password-url (get-named-route req "auth:forgot-password")]
-          [:li [:a {:href forgot-password-url} "Forgot password?"]])
+        (when-let [reset-password-url (get-named-route req "auth:reset-password")]
+          [:li [:a {:href reset-password-url} "Forgot password?"]])
         (when-let [magic-link-url (get-named-route req "auth:magic-link")]
           [:li [:a {:href magic-link-url} "Get a magic login link"]])]
        [:button.primary {:type "submit"} "Sign in"]]]]))
@@ -387,24 +481,54 @@
      [:h3 "Verification sent"]
      [:p "Thanks for signing up. A verification has been sent to " [:strong (j/get data :email)] "."]
      [:p "Please check your email and follow the activation link to verify your account."]
-     [:p "Don't forget to check your spam folder if you can't find the activation email."]]))
+     [:p "Don't forget to check your spam folder if you can't find the email."]]))
 
 (defn component:sign-up-success [_req]
   [:section.auth
    [:h3 "Sign up complete"]
    [:p "You are all signed up and signed in. Welcome to the site."]])
 
-; forgot password view ;
+; reset password view ;
 
-(defn component:change-password-form [req]
+(defn component:reset-password-email-form [req]
+  (let [csrf-token (j/call req :csrfToken)
+        errors (j/get req :errors)
+        data (j/get req :body)]
+    [:section.auth
+     [:p "Please enter your email to receive a password reset link."]
+     [:form {:method "POST"}
+      [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)}]]
+      [component:error errors :email]
+      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [component:messages req]
+      [:div.actions
+       [:ul
+        [:li [:a {:href (get-named-route req "auth:sign-in")} "Sign in"]]
+        [:li [:a {:href (get-named-route req "auth:sign-up")} "Sign up"]]]
+       [:button.primary {:type "submit"} "Reset password"]]]]))
+
+(defn component:reset-password-email [req verify-url]
+  [:div
+   [:h1 {:align "center"} "Reset password link"]
+   [:p {:align "center"} "Click the link to reset your password at " (aget req "hostname")]
+   [:p {:align "center"}
+    [:a {:href verify-url} verify-url]]])
+
+(defn component:reset-password-email-form-done [req]
+  (let [data (j/get req :body)]
+    [:section.auth
+     [:h3 "Reset password link sent"]
+     [:p "A reset password link has been sent to " [:strong (j/get data :email)] "."]
+     [:p "Please check your email and follow the link to reset your password."]
+     [:p "Don't forget to check your spam folder if you can't find the email."]]))
+
+(defn component:reset-password-form [req]
   (let [csrf-token (j/call req :csrfToken)
         errors (j/get req :errors)
         data (j/get req :body)]
     [:section.auth
      [:p "Please enter a new password."]
      [:form {:method "POST"}
-      [:p [:input.fit {:name "current" :type "password" :placeholder "Current password" :default-value (j/get data :current)}]]
-      [component:error errors :current]
       [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)}]]
       [component:error errors :password]
       [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)}]]
@@ -469,4 +593,48 @@
           middleware:verify-sign-up
           middleware:finalize-sign-up
           (make-middleware:signed-in-redirect sign-up-redirect)
+          (fn [req res] (direct-to-template res template selector [(or simple-message-component component:simple-message) req]))))
+
+(defn setup-reset-password
+  "Add a 'reset password' flow to the app. Covers both 'change password' and 'forgot password' functionality.
+  Pass in an HTML `template` string and `selector` where the auth UI should be mounted.
+
+  You can override various aspects of the UI using these keys:
+  * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
+  * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
+  * `:reset-password-form-component` is a Reagent component to render the reset-password form (defaults to `component:reset-password-form`).
+  * `:simple-message-component` is a Reagent component to render error messages during the password reset process (defaults to `component:simple-message-component`)."
+  [app template selector
+   & [{:keys [reset-password-redirect
+              reset-password-email-subject
+              reset-password-from-address
+              reset-password-email-component
+              reset-password-email-form-component
+              reset-password-email-form-done-component
+              reset-password-form-component
+              simple-message-component]}]]
+  (j/call app :use (name-route app "/auth/reset-password" "auth:reset-password")
+          middleware:reset-password-email-submit
+          (make-middleware:reset-password-send-email
+            (or reset-password-email-component component:reset-password-email)
+            reset-password-email-subject reset-password-from-address)
+          (fn [req res done]
+            (let [validation-errors (j/get req :errors)]
+              (if (and (is-post? req) (not validation-errors))
+                (done)
+                (direct-to-template res template selector [(or reset-password-email-form-component component:reset-password-email-form) req]))))
+          (fn [req res] (direct-to-template res template selector [(or reset-password-email-form-done-component component:reset-password-email-form-done) req])))
+  (j/call app :use (name-route app "/auth/reset-password-form" "auth:reset-password-form")
+          middleware:verify-reset-password
+          middleware:reset-password-submit
+          (fn [req res done]
+            (let [validation-errors (j/get req :errors)]
+              (if (and (or (not (is-post? req))
+                           validation-errors)
+                       (or (j/get-in req [:auth :reset-password-data])
+                           (j/get req :user)))
+                (direct-to-template res template selector [(or reset-password-form-component component:reset-password-form) req])
+                (done))))
+          middleware:update-password
+          (make-middleware:signed-in-redirect reset-password-redirect)
           (fn [req res] (direct-to-template res template selector [(or simple-message-component component:simple-message) req]))))
