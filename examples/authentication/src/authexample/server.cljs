@@ -33,6 +33,7 @@
     (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
     (auth/setup-auth app) ; optional argument `sign-out-redirect-url` which defaults to "/".
     (auth/setup-email-based-auth app template "main")
+    (auth/setup-reset-password app template "main")
     #_ (setup-email-based-auth app template "main"
                                {:sign-in-redirect "/"
                                 :sign-in-form-component component:sign-in-form
