@@ -560,6 +560,7 @@
   Pass in an HTML `template` string and `selector` where the auth UI should be be mounted.
 
   You can override various aspects of the UI using these keys:
+
   * `:sign-in-redirect` is the URL to redirect to after signing in (defaults to `/`).
   * `:sign-up-redirect` is the URL to redirect to after signing up successfully (defaults to `/`).
   * `:sign-in-form-component` is a Reagent component to render the sign-in form (defaults to `component:sign-in-form`).
@@ -600,6 +601,7 @@
   Pass in an HTML `template` string and `selector` where the auth UI should be mounted.
 
   You can override various aspects of the UI using these keys:
+
   * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
   * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
   * `:reset-password-form-component` is a Reagent component to render the reset-password form (defaults to `component:reset-password-form`).
