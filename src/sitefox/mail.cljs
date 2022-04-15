@@ -13,7 +13,7 @@
   []
   (let [smtp-url (env "SMTP_SERVER" nil)]
     (if smtp-url
-      (js/Promise. (fn [res err] (res (.createTransport nm smtp-url))))
+      (js/Promise. (fn [res _err] (res (.createTransport nm smtp-url))))
       (-> (.createTestAccount nm)
           (.then (fn [account]
                    (.createTransport
