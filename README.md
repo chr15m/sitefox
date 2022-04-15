@@ -8,7 +8,7 @@ In the tradition of Django, Flask, and Rails.
 Designed for indie devs who ship fast.
 Battle tested on real sites.
 
-[Philosophy](#philosophy) | [Quick start](#quick-start) | [Community](#community) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples)
+[Philosophy](#philosophy) | [Quick start](#quick-start) | [Documentation](https://chr15m.github.io/sitefox/) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples) | [Community](#community)
 
 ```clojure
 (ns webserver
@@ -76,7 +76,7 @@ Add Sitefox to your project as a dependency:
 
 ```
 {:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.2" :git/sha "c5670989bac1b99f9a8e73799ce8470ed369179f"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.4" :git/sha "c5670989bac1b99f9a8e73799ce8470ed369179f"}}}
 ```
 
 If you're using `npm` you can install sitefox as a dependency that way.
@@ -126,7 +126,7 @@ An example server with two routes, one of which writes values to the key-value d
     (setup-routes app)))
 ```
 
-More [Sitefox examples here](./examples).
+More [Sitefox examples here](https://github.com/chr15m/sitefox/tree/main/examples).
 
 ## Community
 
@@ -251,7 +251,48 @@ To read a value from the session store:
 
 ### Authentication
 
-The [authentication example](./examples/authentication) is currently in progress.
+Sitefox wraps the Passport library to implement authentication.
+You can add simple email and password based authentication to your app with three function calls:
+
+```
+(defn setup-routes [app]
+  (let [template (fs/readFileSync "index.html")]
+    (web/reset-routes app)
+    ; three calls to set up email based authentication
+    (auth/setup-auth app)
+    (auth/setup-email-based-auth app template "main")
+    (auth/setup-reset-password app template "main")
+    ; ... add your additional routes here ... ;
+    ))
+```
+
+The `template` string passed in is an HTML document and `"main"` is the selector specifying where to mount the auth UI.
+
+It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions.
+See the [auth documentation](https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth) for detail about how to supply your own Reagent forms.
+Also see the [source code for the default Reagent auth forms](https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L401) if you want to make your own.
+
+When a user signs up their data is persisted into the default Keyv database used by Sitefox.
+You can retrieve the currently authenticated user's datastructure on the request object:
+
+```
+(let [user (aget req "user")] ...)
+```
+
+You can then update the user's data and save their data back to the database.
+The `applied-science.js-interop` library is convenient for this:
+
+```
+(p/let [user (aget req "user")]
+  (j/assoc! user :somekey 42)
+  (auth/save-user user))
+```
+
+If you want to create a new table it is useful to key it on the user's uuid which you can obtain with `(:id user)`.
+
+See the [authentication example](https://github.com/chr15m/sitefox/tree/main/examples/authentication) for more detail.
+
+To add a new authentication scheme such as username based, or 3rd party oauth, consult the [Passport docs](https://www.passportjs.org/) and [auth.cljs](https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L210). Pull requests most welcome!
 
 ### Templates
 
