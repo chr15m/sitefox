@@ -6,7 +6,7 @@
   <img src="logo.svg?sanitize=true" alt="Sitefox logo" /><br />
 </p>
 <p>In the tradition of Django, Flask, and Rails. Designed for indie devs who ship fast. Battle tested on real sites.</p>
-<p><a href="#philosophy">Philosophy</a> | <a href="#quick-start">Quick start</a> | <a href="#community">Community</a> | <a href="#api">API</a> | <a href="https://github.com/chr15m/sitefox/tree/main/examples">Examples</a></p>
+<p><a href="#philosophy">Philosophy</a> | <a href="#quick-start">Quick start</a> | <a href="https://chr15m.github.io/sitefox/">Documentation</a> | <a href="#api">API</a> | <a href="https://github.com/chr15m/sitefox/tree/main/examples">Examples</a> | <a href="#community">Community</a></p>
 <pre><code class="language-clojure">(ns webserver
   (:require
     [promesa.core :as p]
@@ -98,7 +98,7 @@
     ; set up the routes for the first time
     (setup-routes app)))
 </code></pre>
-<p>More <a href="./examples">Sitefox examples here</a>.</p>
+<p>More <a href="https://github.com/chr15m/sitefox/tree/main/examples">Sitefox examples here</a>.</p>
 <h2><a href="#community" id="community"></a>Community</h2>
 <p>If you need support with Sitefox you can:</p>
 <ul>
@@ -168,7 +168,30 @@
 <pre><code class="language-clojure">(aget req "session" "myvalue")
 </code></pre>
 <h3><a href="#authentication" id="authentication"></a>Authentication</h3>
-<p>The <a href="./examples/authentication">authentication example</a> is currently in progress.</p>
+<p>Sitefox wraps the Passport library to implement authentication. You can add simple email and password based authentication to your app with three function calls:</p>
+<pre><code>(defn setup-routes [app]
+  (let [template (fs/readFileSync "index.html")]
+    (web/reset-routes app)
+    ; three calls to set up email based authentication
+    (auth/setup-auth app)
+    (auth/setup-email-based-auth app template "main")
+    (auth/setup-reset-password app template "main")
+    ; ... add your additional routes here ... ;
+    ))
+</code></pre>
+<p>The <code>template</code> string passed in is an HTML document and <code>"main"</code> is the selector specifying where to mount the auth UI.</p>
+<p>It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions. See the <a href="https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth">auth documentation</a> for detail about how to supply your own Reagent forms. Also see the <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L401">source code for the default Reagent auth forms</a> if you want to make your own.</p>
+<p>When a user signs up their data is persisted into the default Keyv database used by Sitefox. You can retrieve the currently authenticated user’s datastructure on the request object:</p>
+<pre><code>(let [user (aget req "user")] ...)
+</code></pre>
+<p>You can then update the user’s data and save their data back to the database. The <code>applied-science.js-interop</code> library is convenient for this:</p>
+<pre><code>(p/let [user (aget req "user")]
+  (j/assoc! user :somekey 42)
+  (auth/save-user user))
+</code></pre>
+<p>If you want to create a new table it is useful to key it on the user’s uuid which you can obtain with <code>(:id user)</code>.</p>
+<p>See the <a href="https://github.com/chr15m/sitefox/tree/main/examples/authentication">authentication example</a> for more detail.</p>
+<p>To add a new authentication scheme such as username based, or 3rd party oauth, consult the <a href="https://www.passportjs.org/">Passport docs</a> and <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L210">auth.cljs</a>. Pull requests most welcome!</p>
 <h3><a href="#templates" id="templates"></a>Templates</h3>
 <p>Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.</p>
 <pre><code class="language-clojure">[sitefox.html :refer [render-into]]
