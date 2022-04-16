@@ -1,7 +1,6 @@
 (ns sitefox.auth
   (:require
-    ["passport" :as passport]
-    ["passport-local" :as LocalStrategy]
+    [sitefox.deps :refer [passport LocalStrategy]]
     ["node-input-validator" :refer [Validator]]
     ["html-to-text" :refer [htmlToText]]
     [clojure.test :refer-macros [is async]]
@@ -213,13 +212,13 @@
 
 (defn middleware:sign-in-submit [req res done]
   (if (is-post? req)
-    ((passport/authenticate "local"
-                            (fn [err user info]
-                              (cond
-                                err (done err)
-                                (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
-                                               (done))
-                                :else (j/call req :logIn user done))))
+    ((.authenticate passport "local"
+                    (fn [err user info]
+                      (cond
+                        err (done err)
+                        (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
+                                       (done))
+                        :else (j/call req :logIn user done))))
      req res done)
     (done)))
 
@@ -546,13 +545,13 @@
 (defn setup-auth
   "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'."
   [app & [sign-out-redirect-url]]
-  (j/call app :use (passport/authenticate "session"))
+  (j/call app :use (.authenticate passport "session"))
   (j/call app :get (name-route app "/auth/sign-out" "auth:sign-out") (fn [req res]
                                       (j/call req :logout)
                                       (.redirect res (or sign-out-redirect-url "/"))))
   (when (not (j/get passport :_sitefox_setup_auth))
-    (passport/serializeUser serialize-user)
-    (passport/deserializeUser deserialize-user)
+    (.serializeUser passport serialize-user)
+    (.deserializeUser passport deserialize-user)
     (j/assoc! passport :_sitefox_setup_auth true)))
 
 (defn setup-email-based-auth

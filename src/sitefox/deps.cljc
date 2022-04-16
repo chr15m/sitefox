@@ -1,4 +1,7 @@
 (ns sitefox.deps
+  "This module exists so shadow-cljs can be used without :target :esm.
+   Nbb uses esm and so the $default syntax works there.
+  With shadow-cljs in :target :node-script mode the imports can't have $default."
   (:require
    #?(:org.babashka/nbb
       ["express$default" :as r-express]
@@ -37,6 +40,14 @@
       :cljs
       ["keyv" :as r-Keyv])
    #?(:org.babashka/nbb
+      ["passport$default" :as r-passport]
+      :cljs
+      ["passport" :as r-passport])
+   #?(:org.babashka/nbb
+      ["passport-local$default" :as r-LocalStrategy]
+      :cljs
+      ["passport-local" :as r-LocalStrategy])
+   #?(:org.babashka/nbb
       [nbb.core :refer [load-file]]
       :cljs
       [clojure.core :refer [load-file]])))
@@ -52,4 +63,6 @@
      (def morgan r-morgan)
      (def parse-html parse)
      (def Keyv r-Keyv)
+     (def passport r-passport)
+     (def LocalStrategy r-LocalStrategy)
      (def cljs-loader load-file)))
