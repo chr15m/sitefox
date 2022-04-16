@@ -1,4 +1,12 @@
 (ns sitefox.auth
+  "Built-in authentication wrapping passport.js - so far email + password based authentication
+  is supported out of the box:
+  
+  ```
+    (auth/setup-auth app)
+    (auth/setup-email-based-auth app template \"main\")
+    (auth/setup-reset-password app template \"main\")
+  ```"
   (:require
     [sitefox.deps :refer [passport LocalStrategy]]
     ["node-input-validator" :refer [Validator]]
@@ -136,7 +144,17 @@
 
 ;***** authentication helper functions *****;
 
-(defn validate-post-data [req fields & [warnings]]
+(defn validate-post-data
+  "Uses node-input-validator to validated post data and returns any validation errors.
+   `fields` is a structure following the input validator format like: `{:email [\"required\" \"email\"]}`.
+  `warnings` is similarly a structure overriding the default warnings like: `{:email \"You must supply a valid email address\"}`."
+  [req fields & [warnings]]
+  fields {:email ["required" "email"]
+                    :email2 ["required" "email" "same:email"]
+                    :password ["required"]
+                    :password2 ["required" "same:password"]}
+            warnings {:email2.same "Email addresses must match."
+                      :password2.same "Passwords must match."}
   (p/let [data (j/get req :body)
           validator (Validator. data (clj->js fields) (clj->js (or warnings {})))
           validated (.check validator)
@@ -144,15 +162,21 @@
     (when (not validated)
       validation-errors)))
 
-(defn add-messages! [req messages]
+(defn add-messages!
+  "Add messages to be displayed during the authentication process."
+  [req messages]
   (j/update-in! req [:auth :messages] #(.concat (or % #js []) (clj->js messages))))
 
 ;***** user data functions *****;
 
-(defn serialize-user [user cb]
+(defn serialize-user
+  "Internal function used by passport to store a user reference in the session."
+  [user cb]
   (cb nil #js {:id (j/get user :id)}))
 
-(defn deserialize-user [user cb]
+(defn deserialize-user
+  "Internal function used by passport to retrieve the user's full data from the session."
+  [user cb]
   (p/let [users-table (kv "users")
           user-id (j/get user :id)
           user (.get users-table user-id)]
@@ -196,7 +220,9 @@
     (.set users-table user-id user-data)
     user-data))
 
-(defn verify-kv-email-user [email password cb]
+(defn verify-kv-email-user
+  "Verify the user's supplied email and password against that in the database."
+  [email password cb]
   (p/let [user (get-user-by-key "email" email)
           hashed-password (j/get-in user [:auth :password])
           salt (j/get-in user [:auth :salt])
@@ -399,11 +425,15 @@
 
 ;***** views *****;
 
-(defn component:error [errors k]
+(defn component:error
+  "Reagent component to display an error message for a field validation error."
+  [errors k]
   (let [err (j/get-in errors [(name k) "message"])]
     (when err [:p.error err])))
 
-(defn component:messages [req]
+(defn component:messages
+  "Reagent component to display messages related to authentication."
+  [req]
   (let [messages (j/get-in req [:auth :messages])]
     [:ul.messages
      (for [m (range (count messages))]
@@ -412,7 +442,9 @@
                :class (j/get message :class)}
           (j/get message :message)]))]))
 
-(defn component:simple-message [req]
+(defn component:simple-message
+  "Reagent component to display messages related to authentication."
+  [req]
   [:section.auth
    [component:messages req]])
 

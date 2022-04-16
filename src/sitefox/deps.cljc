@@ -1,5 +1,5 @@
 (ns sitefox.deps
-  "This module exists so shadow-cljs can be used without :target :esm.
+  "This module exists so that shadow-cljs can be used without :target :esm.
    Nbb uses esm and so the $default syntax works there.
   With shadow-cljs in :target :node-script mode the imports can't have $default."
   (:require
