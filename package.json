@@ -27,6 +27,7 @@
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.cljs",
-    "docs": "nbb bin/generate-docs.cljs"
+    "docs": "nbb bin/generate-docs.cljs",
+    "prepare": "npm run sync-deps; npm run docs"
   }
 }
