@@ -1,4 +1,5 @@
 (ns sitefox.html
+  "Functions for wrangling HTML and rendering Reagent components into selectors."
   (:require
    [clojure.test :refer [is]]
    [applied-science.js-interop :as j]

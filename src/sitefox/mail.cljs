@@ -1,4 +1,5 @@
 (ns sitefox.mail
+  "Functions for sending email from web services using node-mailer."
   (:require
     [promesa.core :as p]
     [applied-science.js-interop :as j]

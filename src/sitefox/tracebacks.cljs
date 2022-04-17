@@ -1,4 +1,5 @@
 (ns sitefox.tracebacks
+  "Server side error handling. Get tracebacks from live sites emailed to you."
   (:require
     [promesa.core :as p]
     [sitefox.util :refer [env]]

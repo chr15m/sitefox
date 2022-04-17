@@ -1,4 +1,5 @@
 (ns sitefox.ui
+  "Utility functions that can be used in client-side code."
   (:require
     [clojure.test :refer [is]]))
 

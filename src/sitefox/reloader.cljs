@@ -1,4 +1,5 @@
 (ns sitefox.reloader
+  "Functions to ensuring live-reloading works during development mode."
   (:require
     [promesa.core :as p]
     [applied-science.js-interop :as j]

@@ -1,4 +1,5 @@
 (ns sitefox.logging
+  "Functions to help with writing log files."
   (:require
     ["path" :refer [basename]]
     ["util" :as util]
