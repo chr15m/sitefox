@@ -38,7 +38,10 @@
                               (js/setTimeout #(on-change file) 500))))]
       (.add watcher current-file)
       (j/call watcher :on "change" (fn [file _stat]
-                                     (on-change file))))))
+                                     (on-change file)))
+      (j/call watcher :on "fallback"
+              (fn [limit]
+                (print "Reloader hit file-watcher limit: " limit))))))
 
 (defn sync-browser
   "Sets up browser-sync for development. Hot-loads CSS and automatically
