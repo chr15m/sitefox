@@ -254,7 +254,7 @@ To read a value from the session store:
 Sitefox wraps the Passport library to implement authentication.
 You can add simple email and password based authentication to your app with three function calls:
 
-```
+```clojure
 (defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
     (web/reset-routes app)
@@ -275,14 +275,14 @@ Also see the [source code for the default Reagent auth forms](https://github.com
 When a user signs up their data is persisted into the default Keyv database used by Sitefox.
 You can retrieve the currently authenticated user's datastructure on the request object:
 
-```
+```clojure
 (let [user (aget req "user")] ...)
 ```
 
 You can then update the user's data and save their data back to the database.
 The `applied-science.js-interop` library is convenient for this:
 
-```
+```clojure
 (p/let [user (aget req "user")]
   (j/assoc! user :somekey 42)
   (auth/save-user user))
