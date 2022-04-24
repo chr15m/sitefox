@@ -34,10 +34,10 @@ Battle tested on real sites.
 ### Batteries included
 
  * [Routing](#web-server--routes)
+ * [Templates](#templates)
  * [Database + Key-value store](#database)
  * [Sessions](#sessions)
  * [Authentication](#authentication)
- * [Templates](#templates)
  * [Email](#email)
  * [Forms](#forms)
  * [Logging](#logging)
@@ -181,6 +181,38 @@ Also see these examples:
  * [shadow-cljs server example](https://github.com/chr15m/sitefox/tree/main/examples/shadow-cljs).
  * [nbb server example](https://github.com/chr15m/sitefox/tree/main/examples/nbb).
 
+### Templates
+
+Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.
+
+```clojure
+[sitefox.html :refer [render-into]]
+```
+
+You can load an HTML document and render Reagent forms into a selected element:
+
+```clojure
+(def index-html (fs/readFileSync "index.html"))
+
+(defn component-main []
+  [:div
+   [:h1 "Hello world!"]
+   [:p "This is my content."]])
+
+; this returns a new HTML string that can be returned
+; e.g. with (.send res)
+(render-into index-html "main" [component-main])
+```
+
+Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) and offers shortcuts for working with HTML & Reagent:
+
+ * `html/parse` is shorthand for `node-html-parser/parse`.
+ * `html/render` is shorthand for Reagent's `render-to-static-markup`.
+ * `html/$` is shorthand for the parser's `querySelector`.
+ * `html/$$` is shorthand for the parser's `querySelectorAll`.
+
+Also see the [templates example](https://github.com/chr15m/sitefox/tree/main/examples/templates) project.
+
 ### Database
 
 Sitefox makes it easy to start storing key-value data with no configuration.
@@ -293,38 +325,6 @@ If you want to create a new table it is useful to key it on the user's uuid whic
 See the [authentication example](https://github.com/chr15m/sitefox/tree/main/examples/authentication) for more detail.
 
 To add a new authentication scheme such as username based, or 3rd party oauth, consult the [Passport docs](https://www.passportjs.org/) and [auth.cljs](https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L210). Pull requests most welcome!
-
-### Templates
-
-Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.
-
-```clojure
-[sitefox.html :refer [render-into]]
-```
-
-You can load an HTML document and render Reagent forms into a selected element:
-
-```clojure
-(def index-html (fs/readFileSync "index.html"))
-
-(defn component-main []
-  [:div
-   [:h1 "Hello world!"]
-   [:p "This is my content."]])
-
-; this returns a new HTML string that can be returned
-; e.g. with (.send res)
-(render-into index-html "main" [component-main])
-```
-
-Sitefox uses [node-html-parser](https://www.npmjs.com/package/node-html-parser) and offers shortcuts for working with HTML & Reagent:
-
- * `html/parse` is shorthand for `node-html-parser/parse`.
- * `html/render` is shorthand for Reagent's `render-to-static-markup`.
- * `html/$` is shorthand for the parser's `querySelector`.
- * `html/$$` is shorthand for the parser's `querySelectorAll`.
-
-Also see the [templates example](https://github.com/chr15m/sitefox/tree/main/examples/templates) project.
 
 ### Email
 
