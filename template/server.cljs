@@ -4,8 +4,13 @@
     [promesa.core :as p]
     [nbb.core :refer [*file*]]
     [sitefox.web :as web]
+    [sitefox.util :refer [env]]
+    [sitefox.tracebacks :refer [install-traceback-emailer]]
     [sitefox.html :refer [render-into]]
     [sitefox.reloader :refer [nbb-reloader]]))
+
+(when-let [admin-email (env "ADMIN_EMAIL")]
+  (install-traceback-emailer admin-email))
 
 (def template (fs/readFileSync "index.html"))
 
