@@ -590,7 +590,7 @@
   "Set up passport email based authentication with all of the required forms and views.
   Pass in an HTML `template` string and `selector` where the auth UI should be be mounted.
 
-  You can override various aspects of the UI using these keys:
+  You can override various aspects of the UI using these keyword arguments:
 
   * `:sign-in-redirect` is the URL to redirect to after signing in (defaults to `/`).
   * `:sign-up-redirect` is the URL to redirect to after signing up successfully (defaults to `/`).
@@ -601,12 +601,12 @@
   * `:sign-up-form-done-component` is a Reagent component to render the sign-up done page (defaults to `component:sign-up-form-done`).
   * `:simple-message-component` is a Reagent component to render error messages during the verification stage (defaults to `component:simple-message`)."
   [app template selector
-   & [{:keys [sign-in-redirect
-              sign-in-form-component
-              sign-up-redirect
-              sign-up-email-component sign-up-email-subject sign-up-from-address
-              sign-up-form-component sign-up-form-done-component
-              simple-message-component]}]]
+   & {:keys [sign-in-redirect
+             sign-in-form-component
+             sign-up-redirect
+             sign-up-email-component sign-up-email-subject sign-up-from-address
+             sign-up-form-component sign-up-form-done-component
+             simple-message-component]}]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
   (j/call app :use (name-route app "/auth/sign-in" "auth:sign-in")
           middleware:sign-in-submit
@@ -631,21 +631,21 @@
   "Add a 'reset password' flow to the app. Covers both 'change password' and 'forgot password' functionality.
   Pass in an HTML `template` string and `selector` where the auth UI should be mounted.
 
-  You can override various aspects of the UI using these keys:
+  You can override various aspects of the UI using these keyword argument:
 
   * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
   * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
   * `:reset-password-form-component` is a Reagent component to render the reset-password form (defaults to `component:reset-password-form`).
   * `:simple-message-component` is a Reagent component to render error messages during the password reset process (defaults to `component:simple-message-component`)."
   [app template selector
-   & [{:keys [reset-password-redirect
-              reset-password-email-subject
-              reset-password-from-address
-              reset-password-email-component
-              reset-password-email-form-component
-              reset-password-email-form-done-component
-              reset-password-form-component
-              simple-message-component]}]]
+   & {:keys [reset-password-redirect
+             reset-password-email-subject
+             reset-password-from-address
+             reset-password-email-component
+             reset-password-email-form-component
+             reset-password-email-form-done-component
+             reset-password-form-component
+             simple-message-component]}]
   (j/call app :use (name-route app "/auth/reset-password" "auth:reset-password")
           middleware:reset-password-email-submit
           (make-middleware:reset-password-send-email
