@@ -9,7 +9,7 @@
   "morgan" "1.10.0",
   "passport" "0.5.2",
   "node-input-validator" "4.5.0",
-  "sqlite3" "5.0.3",
+  "sqlite3" "5.0.2",
   "express" "4.17.1",
   "csurf" "1.11.0",
   "express-session" "1.17.2", 

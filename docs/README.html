@@ -29,10 +29,10 @@
 <h3><a href="#batteries-included" id="batteries-included"></a>Batteries included</h3>
 <ul>
 <li><a href="#web-server--routes">Routing</a></li>
+<li><a href="#templates">Templates</a></li>
 <li><a href="#database">Database + Key-value store</a></li>
 <li><a href="#sessions">Sessions</a></li>
 <li><a href="#authentication">Authentication</a></li>
-<li><a href="#templates">Templates</a></li>
 <li><a href="#email">Email</a></li>
 <li><a href="#forms">Forms</a></li>
 <li><a href="#logging">Logging</a></li>
@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.4" :git/sha "6f7798dc644df1f92e72d1ae95fe9ae534aa0a23"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.5" :git/sha "99500f70f8134b0e186acf24a0bfc1ada07b658f"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -135,6 +135,30 @@
 <li><a href="https://github.com/chr15m/sitefox/tree/main/examples/shadow-cljs">shadow-cljs server example</a>.</li>
 <li><a href="https://github.com/chr15m/sitefox/tree/main/examples/nbb">nbb server example</a>.</li>
 </ul>
+<h3><a href="#templates" id="templates"></a>Templates</h3>
+<p>Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.</p>
+<pre><code class="language-clojure">[sitefox.html :refer [render-into]]
+</code></pre>
+<p>You can load an HTML document and render Reagent forms into a selected element:</p>
+<pre><code class="language-clojure">(def index-html (fs/readFileSync "index.html"))
+
+(defn component-main []
+  [:div
+   [:h1 "Hello world!"]
+   [:p "This is my content."]])
+
+; this returns a new HTML string that can be returned
+; e.g. with (.send res)
+(render-into index-html "main" [component-main])
+</code></pre>
+<p>Sitefox uses <a href="https://www.npmjs.com/package/node-html-parser">node-html-parser</a> and offers shortcuts for working with HTML &amp; Reagent:</p>
+<ul>
+<li><code>html/parse</code> is shorthand for <code>node-html-parser/parse</code>.</li>
+<li><code>html/render</code> is shorthand for Reagent’s <code>render-to-static-markup</code>.</li>
+<li><code>html/$</code> is shorthand for the parser’s <code>querySelector</code>.</li>
+<li><code>html/$$</code> is shorthand for the parser’s <code>querySelectorAll</code>.</li>
+</ul>
+<p>Also see the <a href="https://github.com/chr15m/sitefox/tree/main/examples/templates">templates example</a> project.</p>
 <h3><a href="#database" id="database"></a>Database</h3>
 <p>Sitefox makes it easy to start storing key-value data with no configuration. You can transition to more structured data later if you need it. It bundles <a href="https://github.com/lukechilds/keyv">Keyv</a> which is a database backed key-value store. You can access the key-value store through <code>db/kv</code> and the underlying database through <code>db/client</code>.</p>
 <p>By default a local sqlite database is used and you can start persisting data on the server immediately without any configuration. Once you move to production you can configure another database using the environment variable <code>DATABASE_URL</code>. For example, to use a postgres database called “somedatabase”:</p>
@@ -169,7 +193,7 @@
 </code></pre>
 <h3><a href="#authentication" id="authentication"></a>Authentication</h3>
 <p>Sitefox wraps the Passport library to implement authentication. You can add simple email and password based authentication to your app with three function calls:</p>
-<pre><code>(defn setup-routes [app]
+<pre><code class="language-clojure">(defn setup-routes [app]
   (let [template (fs/readFileSync "index.html")]
     (web/reset-routes app)
     ; three calls to set up email based authentication
@@ -182,40 +206,16 @@
 <p>The <code>template</code> string passed in is an HTML document and <code>"main"</code> is the selector specifying where to mount the auth UI.</p>
 <p>It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions. See the <a href="https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth">auth documentation</a> for detail about how to supply your own Reagent forms. Also see the <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L401">source code for the default Reagent auth forms</a> if you want to make your own.</p>
 <p>When a user signs up their data is persisted into the default Keyv database used by Sitefox. You can retrieve the currently authenticated user’s datastructure on the request object:</p>
-<pre><code>(let [user (aget req "user")] ...)
+<pre><code class="language-clojure">(let [user (aget req "user")] ...)
 </code></pre>
 <p>You can then update the user’s data and save their data back to the database. The <code>applied-science.js-interop</code> library is convenient for this:</p>
-<pre><code>(p/let [user (aget req "user")]
+<pre><code class="language-clojure">(p/let [user (aget req "user")]
   (j/assoc! user :somekey 42)
   (auth/save-user user))
 </code></pre>
 <p>If you want to create a new table it is useful to key it on the user’s uuid which you can obtain with <code>(:id user)</code>.</p>
 <p>See the <a href="https://github.com/chr15m/sitefox/tree/main/examples/authentication">authentication example</a> for more detail.</p>
 <p>To add a new authentication scheme such as username based, or 3rd party oauth, consult the <a href="https://www.passportjs.org/">Passport docs</a> and <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L210">auth.cljs</a>. Pull requests most welcome!</p>
-<h3><a href="#templates" id="templates"></a>Templates</h3>
-<p>Instead of templates, Sitefox offers shortcuts for server side Reagent rendering, merged wth HTML documents.</p>
-<pre><code class="language-clojure">[sitefox.html :refer [render-into]]
-</code></pre>
-<p>You can load an HTML document and render Reagent forms into a selected element:</p>
-<pre><code class="language-clojure">(def index-html (fs/readFileSync "index.html"))
-
-(defn component-main []
-  [:div
-   [:h1 "Hello world!"]
-   [:p "This is my content."]])
-
-; this returns a new HTML string that can be returned
-; e.g. with (.send res)
-(render-into index-html "main" [component-main])
-</code></pre>
-<p>Sitefox uses <a href="https://www.npmjs.com/package/node-html-parser">node-html-parser</a> and offers shortcuts for working with HTML &amp; Reagent:</p>
-<ul>
-<li><code>html/parse</code> is shorthand for <code>node-html-parser/parse</code>.</li>
-<li><code>html/render</code> is shorthand for Reagent’s <code>render-to-static-markup</code>.</li>
-<li><code>html/$</code> is shorthand for the parser’s <code>querySelector</code>.</li>
-<li><code>html/$$</code> is shorthand for the parser’s <code>querySelectorAll</code>.</li>
-</ul>
-<p>Also see the <a href="https://github.com/chr15m/sitefox/tree/main/examples/templates">templates example</a> project.</p>
 <h3><a href="#email" id="email"></a>Email</h3>
 <p>Sitefox bundles <a href="https://nodemailer.com">nodemailer</a> for sending emails. Configure your outgoing SMTP server:</p>
 <pre><code>SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
