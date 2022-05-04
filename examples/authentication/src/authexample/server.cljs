@@ -35,15 +35,15 @@
     (auth/setup-email-based-auth app template "main")
     (auth/setup-reset-password app template "main")
     #_ (setup-email-based-auth app template "main"
-                               {:sign-in-redirect "/"
-                                :sign-in-form-component component:sign-in-form
-                                :sign-up-redirect "/"
-                                :sign-up-email-component component:sign-up-email
-                                :sign-up-email-subject "Please verify your email"
-                                :sign-up-from-address "no-reply@example.com"
-                                :sign-up-form-component component:sign-up-form
-                                :sign-up-form-done-component component:sign-up-form-done
-                                :simple-message-component component:simple-message})
+                               :sign-in-redirect "/"
+                               :sign-in-form-component component:sign-in-form
+                               :sign-up-redirect "/"
+                               :sign-up-email-component component:sign-up-email
+                               :sign-up-email-subject "Please verify your email"
+                               :sign-up-from-address "no-reply@example.com"
+                               :sign-up-form-component component:sign-up-form
+                               :sign-up-form-done-component component:sign-up-form-done
+                               :simple-message-component component:simple-message)
     (j/call app :get "/" (fn [req res] (homepage req res template)))))
 
 (defn main! []
