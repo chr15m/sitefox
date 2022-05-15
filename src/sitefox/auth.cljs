@@ -251,7 +251,7 @@
 (defn make-middleware:signed-in-redirect [redirect-url]
   (fn [req res done]
     (if (j/get req :user)
-      (.redirect res (or redirect-url "/"))
+      (.redirect res (build-absolute-uri req (or redirect-url "/")))
       (done))))
 
 ; sign up middleware ;
@@ -580,7 +580,7 @@
   (j/call app :use (.authenticate passport "session"))
   (j/call app :get (name-route app "/auth/sign-out" "auth:sign-out") (fn [req res]
                                       (j/call req :logout)
-                                      (.redirect res (or sign-out-redirect-url "/"))))
+                                      (.redirect res (build-absolute-uri req (or sign-out-redirect-url "/")))))
   (when (not (j/get passport :_sitefox_setup_auth))
     (.serializeUser passport serialize-user)
     (.deserializeUser passport deserialize-user)
