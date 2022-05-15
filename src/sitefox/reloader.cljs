@@ -34,7 +34,8 @@
                                 (println "Done reloading!"))
                               (.catch (fn [err]
                                         (.log js/console err)
-                                        (reset! is-loading false)))
+                                        (reset! is-loading false)
+                                        true))
                               (.finally (fn []
                                           (reset! is-loading false))))
                           (do (println "Load already in progress, retrying in 500ms")
