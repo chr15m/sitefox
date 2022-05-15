@@ -4,12 +4,14 @@
     [promesa.core :as p]
     [applied-science.js-interop :as j]
     [sitefox.util :refer [env]]
-    [sitefox.deps :refer [cljs-loader]]))
+    [sitefox.deps :refer [cljs-loader]]
+    [sitefox.ui :refer [log]]))
 
 (defn nbb-reloader
   "Sets up filewatcher for development. Automatically re-evaluates this
-  file on changes. Uses browser-sync to push changes to the browser."
-  [current-file callback]
+  file on changes. Uses browser-sync to push changes to the browser.
+  `file` can be a path (string) or a vec of strings."
+  [file callback]
   (when (or (env "DEV") (= (env "NODE_ENV") "development"))
     (p/let [watcher
             (-> (js/import "filewatcher")
@@ -22,6 +24,7 @@
             watcher (watcher)
             is-loading (atom false)
             on-change (fn on-change [file]
+                        (log "File changed:" file)
                         (if-not @is-loading
                           (-> (p/do!
                                 (println "Reloading!")
@@ -36,9 +39,11 @@
                                           (reset! is-loading false))))
                           (do (println "Load already in progress, retrying in 500ms")
                               (js/setTimeout #(on-change file) 500))))]
-      (.add watcher current-file)
-      (j/call watcher :on "change" (fn [file _stat]
-                                     (on-change file)))
+      (if (= (type file) js/String)
+        (.add watcher file)
+        (doseq [f file]
+          (.add watcher f)))
+      (j/call watcher :on "change" (fn [file _stat] (on-change file)))
       (j/call watcher :on "fallback"
               (fn [limit]
                 (print "Reloader hit file-watcher limit: " limit))))))
