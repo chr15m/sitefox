@@ -8,6 +8,8 @@
     "sitefox": "chr15m/sitefox"
   },
   "devDependencies": {
+    "browser-sync": "^2.27.7",
+    "fast-glob": "^3.2.11",
     "filewatcher": "^3.0.1"
   },
   "scripts": {
