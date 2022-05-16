@@ -14,7 +14,7 @@
 (when-let [admin-email (env "ADMIN_EMAIL")]
   (install-traceback-emailer admin-email))
 
-(def template (fs/readFileSync "index.html"))
+(def template (fs/readFileSync "public/index.html"))
 
 (defn component-main []
   [:div
@@ -38,7 +38,7 @@
           [app host port] (web/start)
           sync-options {:files ["public/**/**"]
                         :proxy (str host ":" port)}
-          watch-files (fg #js [self "src/**/*.cljs"])
+          watch-files (fg #js [self "src/**/*.cljs" "public/*"])
           bs (when (env "DEV") (browser-sync/init nil (clj->js sync-options)))]
     (setup-routes app)
     (nbb-reloader watch-files (fn []
