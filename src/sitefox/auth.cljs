@@ -105,7 +105,8 @@
                     (p/let [vi "something else"
                             vx (encrypt-for-transit vi)
                             decrypted (decrypt-for-transit (.slice vx 1))]
-                      (is (= decrypted nil))))))}
+                      (is (= decrypted nil)))
+                    (done))))}
   [encrypted]
   (js/Promise.
     (fn [res _err]
