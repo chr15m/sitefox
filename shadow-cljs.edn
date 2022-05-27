@@ -1,0 +1,7 @@
+{:source-paths ["src"]
+ :dependencies [[reagent "1.1.0"]
+                [funcool/promesa "6.0.2"]
+                [applied-science/js-interop "0.2.7"]]
+ :builds {:test {:target :node-test
+                 :output-to "tests.js"
+                 :ns-regexp "sitefox.*$"}}}
