@@ -312,7 +312,7 @@ You can retrieve the currently authenticated user's datastructure on the request
 ```
 
 You can then update the user's data and save their data back to the database.
-The `applied-science.js-interop` library is convenient for this:
+The `applied-science.js-interop` library is convenient for this (required here as `j`):
 
 ```clojure
 (p/let [user (aget req "user")]

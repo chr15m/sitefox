@@ -1,5 +1,5 @@
 (ns sitefox.auth
-  "Built-in authentication wrapping passport.js - so far email + password based authentication
+  "Built-in authentication wrapping passport.js - email/password based authentication
   is supported out of the box:
   
   ```
@@ -147,7 +147,7 @@
 
 (defn validate-post-data
   "Uses node-input-validator to validated post data and returns any validation errors.
-   `fields` is a structure following the input validator format like: `{:email [\"required\" \"email\"]}`.
+  `fields` is a structure following the input validator format like: `{:email [\"required\" \"email\"]}`.
   `warnings` is similarly a structure overriding the default warnings like: `{:email \"You must supply a valid email address\"}`."
   [req fields & [warnings]]
   fields {:email ["required" "email"]
@@ -591,7 +591,7 @@
   "Set up passport email based authentication with all of the required forms and views.
   Pass in an HTML `template` string and `selector` where the auth UI should be be mounted.
 
-  You can override various aspects of the UI using these keyword arguments:
+  You can override various aspects of the UI using these keys:
 
   * `:sign-in-redirect` is the URL to redirect to after signing in (defaults to `/`).
   * `:sign-up-redirect` is the URL to redirect to after signing up successfully (defaults to `/`).
@@ -632,7 +632,7 @@
   "Add a 'reset password' flow to the app. Covers both 'change password' and 'forgot password' functionality.
   Pass in an HTML `template` string and `selector` where the auth UI should be mounted.
 
-  You can override various aspects of the UI using these keyword argument:
+  You can override various aspects of the UI using these keys:
 
   * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
   * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
