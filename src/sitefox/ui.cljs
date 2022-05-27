@@ -39,12 +39,13 @@
   [dt]
   (-> dt (.split "T") (.join " ") (.split ".") first))
 
-(def slug-regex (js/RegExp. "[^A-Za-z\\u00C0-\\u1FFF\\u2800-\\uFFFD]+" "g"))
+(def slug-regex (js/RegExp. "[^A-Za-z0-9\\u00C0-\\u1FFF\\u2800-\\uFFFD]+" "g"))
 
 (defn slug
   "Converts `text` to a url-friendly slug."
   {:test (fn []
            (is (= (slug "A calm visit, to the kitchen.") "a-calm-visit-to-the-kitchen"))  
+           (is (= (slug "The 99th surprise.") "the-99th-surprise"))
            (is (= (slug "$ goober. it's true.") "goober-it-s-true"))  
            (is (= (slug "* 我爱官话 something") "我爱官话-something")))}
   [text]
