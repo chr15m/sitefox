@@ -335,6 +335,17 @@ Configure your outgoing SMTP server:
 SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
 ```
 
+Then you can use the `send-email` function as follows:
+
+```clojure
+(-> (mail/send-email
+      "test-to@example.com"
+      "test@example.com"
+      "This is my test email."
+      :text "Hello, This is my first email from **Sitefox**. Thank you.")
+    (.then js/console.log))
+```
+
 If you don't specify an SMTP server, the email module will be in debug mode.
 No emails will be sent and the ethereal.email service will be used.
 After running `send-email` you can print the `url` property of the result.
