@@ -69,7 +69,8 @@
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
-  (.use app (csrf))
+  (.use app (csrf #js {:cookie #js {:httpOnly true}}))
+  (.use app (fn [req res done] (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken)) (done)))
   ; emit a warning if SECRET is not set
   (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
   app)

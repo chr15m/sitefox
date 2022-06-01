@@ -363,7 +363,15 @@ To ensure you can `POST` without CSRF warnings you should create a hidden elemen
 [:input {:name "_csrf" :type "hidden" :default-value (.csrfToken req)}]
 ```
 
-If you're making an ajax `POST` from the client side, you should generate a CSRF token with `(.csrfToken req)`, pass it to the front-end, and then include it as a parameter called `_csrf` on your API `POST` call. The tokens remain valid so you can pass them to the front-end at any time, including setting it as a cookie.
+If you're making an ajax `POST` request from the client side, you should pass the CSRF token as a header. A valid token is available in the document's cookie and you can add it to the headers of a fetch request as follows:
+
+```clojure
+(js/fetch \"/api/endpoint\"
+          #js {:method \"POST\"
+               :headers #js {:Content-Type \"application/json\"
+                             :XSRF-Token (csrf-token)}
+                             :body (js/JSON.stringify (clj->js data))})
+```
 
 ### Logging
 

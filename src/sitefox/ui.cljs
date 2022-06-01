@@ -55,3 +55,23 @@
       (.replace slug-regex " ")
       .trim
       (.replace (js/RegExp. " " "g") "-")))
+
+(defn get-cookie
+  "Returns the value of the named cookie from js/document.cookies (or optionally the `cookies` argument)."
+  [cookie-name & [cookies]]
+  (second (re-find (js/RegExp. (str cookie-name "=(.*)")) (or cookies (aget js/document "cookie")))))
+
+(defn csrf-token
+  "Returns the CSRF token passed by Sitefox in the `XSRF-TOKEN` header.
+   Pass this value when doing POST requests via ajax:
+
+   ```clojure
+   (js/fetch \"/api/endpoint\"
+             #js {:method \"POST\"
+                  :headers #js {:Content-Type \"application/json\"
+                                :XSRF-Token (csrf-token)}
+                                :body (js/JSON.stringify (clj->js data))})
+   ```
+  "
+  []
+  (get-cookie "XSRF-TOKEN"))
