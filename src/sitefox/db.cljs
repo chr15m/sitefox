@@ -48,7 +48,20 @@
 
 (defn ls
   "List all key-value entries matching a particular namespace and prefix.
-   Returns a promise that resolves to rows of JSON."
+  Returns a promise that resolves to rows of JSON."
+  {:test (fn []
+           (when (env "TESTING")
+             (async done
+                    (p/let [d (kv "tests")
+                            fixture [["first:a" 1] ["first:b" 2] ["second:c" 3] ["second:d" 4]]
+                            _ (p/all (map #(.set d (first %) (second %)) fixture))
+                            one (ls "tests" "first")
+                            two (ls "tests" "second")
+                            one-test (vec (map second (subvec fixture 0 2)))
+                            two-test (vec (map second (subvec fixture 2 4)))]
+                      (is (= (js->clj one) one-test))
+                      (is (= (js->clj two) two-test))
+                      (done)))))}
   [kv-ns & [pre db]]
   (->
     (.query (or db (client)) (str "select * from keyv where key like '" kv-ns ":" (or pre "") "%'"))
