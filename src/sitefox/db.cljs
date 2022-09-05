@@ -6,6 +6,8 @@
 
   `DATABASE_URL` for Postgres: `postgresql://[user[:password]@][netloc][:port][,...][/dbname][?param1=value1&...]`"
   (:require
+    [clojure.test :refer-macros [is async]]
+    [promesa.core :as p]
     [sitefox.util :refer [env]]
     [sitefox.deps :refer [Keyv]]))
 
@@ -23,6 +25,13 @@
 (defn client
   "The database client that is connected to `DATABASE_URL`.
   This allows you to make raw queries against the database."
+  {:test (fn []
+           (async done
+             (p/let [c (client)
+                     v (.query c "SELECT sqlite_version()")]
+               (is (aget c "query"))
+               (is (-> v (aget 0) (aget "sqlite_version()")))
+               (done))))}
   []
   (->
     (Keyv. database-url)
