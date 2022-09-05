@@ -19,6 +19,15 @@
   The database to use can be configured with the `DATABASE_URL` environment variable.
   See the Keyv documentation for details.
   The promise based API has methods like `(.set kv ...)` and `(.get kv ...)` which do what you'd expect."
+  {:test (fn []
+           (when (env "TESTING")
+             (async done
+                    (p/let [d (kv "tests")
+                            v #js [1 2 3]
+                            _ (.set d "hello" v)
+                            y (.get d "hello")]
+                      (is (= (js->clj v) (js->clj y))))
+                    (done))))}
   [kv-ns]
   (Keyv. database-url (clj->js {:namespace kv-ns})))
 
