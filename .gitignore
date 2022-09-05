@@ -5,3 +5,4 @@ package-lock.json
 workspace
 **/.clj-kondo/.cache
 tests.js
+tests.sqlite
