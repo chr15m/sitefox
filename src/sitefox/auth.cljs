@@ -93,14 +93,16 @@
                             vx (encrypt-for-transit vi)
                             l (.slice vx 0 1)
                             r (.slice vx 2)
-                            decrypted (decrypt-for-transit (str l "X" r))]
+                            replacement (if (= (aget vx 18) "X") "Z" "X")
+                            decrypted (decrypt-for-transit (str l replacement r))]
                       (is (= decrypted nil)))
                     ; test modified encrypted packet
                     (p/let [vi "another thing"
                             vx (encrypt-for-transit vi)
                             l (.slice vx 0 18)
                             r (.slice vx 19)
-                            decrypted (decrypt-for-transit (str l "Z" r))]
+                            replacement (if (= (aget vx 18) "Z") "X" "Z")
+                            decrypted (decrypt-for-transit (str l replacement r))]
                       (is (= decrypted nil)))
                     ; test truncated packet / iv
                     (p/let [vi "something else"
