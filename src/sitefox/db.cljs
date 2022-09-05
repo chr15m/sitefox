@@ -57,16 +57,41 @@
                             _ (p/all (map #(.set d (first %) (second %)) fixture))
                             one (ls "tests" "first")
                             two (ls "tests" "second")
-                            one-test (vec (map second (subvec fixture 0 2)))
-                            two-test (vec (map second (subvec fixture 2 4)))]
-                      (is (= (js->clj one) one-test))
-                      (is (= (js->clj two) two-test))
+                            one-test (set (map second (subvec fixture 0 2)))
+                            two-test (set (map second (subvec fixture 2 4)))]
+                      (is (= (set one) one-test))
+                      (is (= (set two) two-test))
                       (done)))))}
-  [kv-ns & [pre db]]
+  [kv-ns & [pre db filter-function]]
+  ; TODO: run the map & filter over each row streaming out
   (->
     (.query (or db (client)) (str "select * from keyv where key like '" kv-ns ":" (or pre "") "%'"))
     (.then #(.map % (fn [row]
                       (let [k (aget row "key")
                             v (aget (js/JSON.parse (aget row "value")) "value")]
                         (aset v "kind" k)
-                        v))))))
+                        v))))
+    (.then (if filter-function
+             #(.filter % filter-function)
+             identity))))
+
+(defn f
+  "Filter all key-value entries matching a particular namespace and prefix,
+  through the supplied"
+  {:test (fn []
+           (when (env "TESTING")
+             (async done
+                    (p/let [d (kv "tests")
+                            fixture [["first:a" 1] ["first:b" 2] ["first:c" 3]
+                                     ["second:c" 3] ["second:d" 4] ["second:e" 5]]
+                            _ (p/all (map #(.set d (first %) (second %)) fixture))
+                            filter-fn #(= (mod % 2) 1)
+                            one (f "tests" filter-fn "first")
+                            two (f "tests" filter-fn "second")
+                            one-test (set (filter filter-fn (map second (subvec fixture 0 3))))
+                            two-test (set (filter filter-fn (map second (subvec fixture 3 6))))]
+                      (is (= (set one) one-test))
+                      (is (= (set two) two-test))
+                      (done)))))}
+  [kv-ns filter-function & [pre db]]
+  (ls kv-ns pre db filter-function))
