@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.6" :git/sha "5ae8596220e249ebac21f6c19a395d1b2aec75b8"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.7" :git/sha "1e3aa97642c57c06d446a0bb89b178d99fbd07d2"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -208,7 +208,7 @@
 <p>When a user signs up their data is persisted into the default Keyv database used by Sitefox. You can retrieve the currently authenticated user’s datastructure on the request object:</p>
 <pre><code class="language-clojure">(let [user (aget req "user")] ...)
 </code></pre>
-<p>You can then update the user’s data and save their data back to the database. The <code>applied-science.js-interop</code> library is convenient for this:</p>
+<p>You can then update the user’s data and save their data back to the database. The <code>applied-science.js-interop</code> library is convenient for this (required here as <code>j</code>):</p>
 <pre><code class="language-clojure">(p/let [user (aget req "user")]
   (j/assoc! user :somekey 42)
   (auth/save-user user))
@@ -220,6 +220,14 @@
 <p>Sitefox bundles <a href="https://nodemailer.com">nodemailer</a> for sending emails. Configure your outgoing SMTP server:</p>
 <pre><code>SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true
 </code></pre>
+<p>Then you can use the <code>send-email</code> function as follows:</p>
+<pre><code class="language-clojure">(-&gt; (mail/send-email
+      "test-to@example.com"
+      "test@example.com"
+      "This is my test email."
+      :text "Hello, This is my first email from **Sitefox**. Thank you.")
+    (.then js/console.log))
+</code></pre>
 <p>If you don’t specify an SMTP server, the email module will be in debug mode. No emails will be sent and the ethereal.email service will be used. After running <code>send-email</code> you can print the <code>url</code> property of the result. You can use the links that are printed for testing your emails in dev mode.</p>
 <p>Also see the <a href="https://github.com/chr15m/sitefox/tree/main/examples/send-email">send-email example</a> project.</p>
 <h3><a href="#forms" id="forms"></a>Forms</h3>
@@ -227,7 +235,13 @@
 <p>To ensure you can <code>POST</code> without CSRF warnings you should create a hidden element like this (Reagent syntax):</p>
 <pre><code class="language-clojure">[:input {:name "_csrf" :type "hidden" :default-value (.csrfToken req)}]
 </code></pre>
-<p>If you’re making an ajax <code>POST</code> from the client side, you should generate a CSRF token with <code>(.csrfToken req)</code>, pass it to the front-end, and then include it as a parameter called <code>_csrf</code> on your API <code>POST</code> call. The tokens remain valid so you can pass them to the front-end at any time, including setting it as a cookie.</p>
+<p>If you’re making an ajax <code>POST</code> request from the client side, you should pass the CSRF token as a header. A valid token is available in the document’s cookie and you can add it to the headers of a fetch request as follows:</p>
+<pre><code class="language-clojure">(js/fetch \"/api/endpoint\"
+          #js {:method \"POST\"
+               :headers #js {:Content-Type \"application/json\"
+                             :XSRF-Token (csrf-token)}
+                             :body (js/JSON.stringify (clj-&gt;js data))})
+</code></pre>
 <h3><a href="#logging" id="logging"></a>Logging</h3>
 <p>By default the web server will write to log files in the <code>./logs</code> folder. These files are automatically rotated by the server. There are two types of logs:</p>
 <ul>
