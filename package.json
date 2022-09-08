@@ -32,6 +32,7 @@
     "sync-deps": "nbb bin/sync-deps.cljs",
     "docs": "nbb bin/generate-docs.cljs",
     "pre-publish": "npm run sync-deps; nbb bin/update-readme-versions.cljs; npm run docs; echo 'Now commit changes and run `git tag vX.Y.Z`.'",
-    "test": "rm -f tests.sqlite; shadow-cljs compile test && SECRET=x TESTING=1 DATABASE_URL=sqlite://./tests.sqlite node tests.js"
+    "test": "rm -f tests.sqlite; shadow-cljs compile test && SECRET=x TESTING=1 DATABASE_URL=sqlite://./tests.sqlite node tests.js",
+    "watch": "shadow-cljs watch test"
   }
 }
