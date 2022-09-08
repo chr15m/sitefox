@@ -6,11 +6,17 @@
    [reagent.dom.server :refer [render-to-static-markup] :rename {render-to-static-markup r}]
    [sitefox.deps :refer [parse-html]]))
 
-(defn parse "Shorthand for parse-html." [html-string] (parse-html html-string))
+(defn parse "Shorthand for [`node-html-parser`'s `parse` function](https://www.npmjs.com/package/node-html-parser#usage).
+            Returns a dom-like document object that can be manipulated as in the browser."
+  [html-string] (parse-html html-string))
 
-(defn $ "Shorthand for CSS style `querySelector` on parsed HTML `template`." [template selector] (.querySelector template selector))
+(defn $ "Shorthand for CSS style `querySelector` on parsed HTML `element`
+        such as the `document` returned by the `parse` function or a sub-element."
+  [element selector] (.querySelector element selector))
 
-(defn $$ "Shorthand for CSS style `querySelectorAll` on parsed HTML `template`." [template selector] (.querySelectorAll template selector))
+(defn $$ "Shorthand for CSS style `querySelectorAll` on parsed HTML `element`
+         such as the `document` returned by the `parse` function or a sub-element."
+  [element selector] (.querySelectorAll element selector))
 
 (defn render "Shorthand for Reagent's `render-to-static-markup`." [form] (r form))
 
