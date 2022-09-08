@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.7" :git/sha "1e3aa97642c57c06d446a0bb89b178d99fbd07d2"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.9" :git/sha "da6c8823a24a7c8fc9606f928841c75471059e96"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -203,7 +203,12 @@
     ; ... add your additional routes here ... ;
     ))
 </code></pre>
-<p>The <code>template</code> string passed in is an HTML document and <code>"main"</code> is the selector specifying where to mount the auth UI.</p>
+<p>The <code>template</code> string passed in is an HTML document and <code>"main"</code> is the selector specifying where to mount the auth UI. This will set up the following routes by default where you can send users to sign up, sign in, and reset their password:</p>
+<ul>
+<li><code>/auth/sign-in</code></li>
+<li><code>/auth/sign-up</code></li>
+<li><code>/auth/reset-password-form</code></li>
+</ul>
 <p>It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions. See the <a href="https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth">auth documentation</a> for detail about how to supply your own Reagent forms. Also see the <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L401">source code for the default Reagent auth forms</a> if you want to make your own.</p>
 <p>When a user signs up their data is persisted into the default Keyv database used by Sitefox. You can retrieve the currently authenticated user’s datastructure on the request object:</p>
 <pre><code class="language-clojure">(let [user (aget req "user")] ...)
