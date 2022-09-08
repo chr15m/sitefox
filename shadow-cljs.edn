@@ -4,4 +4,5 @@
                 [applied-science/js-interop "0.2.7"]]
  :builds {:test {:target :node-test
                  :output-to "tests.js"
-                 :ns-regexp "sitefox.*$"}}}
+                 :ns-regexp "sitefox.*$"
+                 :autorun true}}}
