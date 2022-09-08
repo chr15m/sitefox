@@ -299,6 +299,11 @@ You can add simple email and password based authentication to your app with thre
 ```
 
 The `template` string passed in is an HTML document and `"main"` is the selector specifying where to mount the auth UI.
+This will set up the following routes by default where you can send users to sign up, sign in, and reset their password:
+
+ * `/auth/sign-in`
+ * `/auth/sign-up`
+ * `/auth/reset-password-form`
 
 It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions.
 See the [auth documentation](https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth) for detail about how to supply your own Reagent forms.
