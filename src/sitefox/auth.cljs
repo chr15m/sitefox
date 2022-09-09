@@ -490,11 +490,12 @@
      [:p "Enter your email and desired password to sign up."]
      [:form {:method "POST"}
       [:div.input
+       [:p [:label {:for "email"} "Enter your email:"]]
        [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
                         :aria-describedby "email-error"}]]
        [component:error errors :email]]
       [:div.input
-       [:p [:label {:for "email2"} "Verify email:"]]
+       [:p [:label {:for "email2"} "Verify your email:"]]
        [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (j/get data :email2)
                         :aria-describedby "email2-error"}]]
        [component:error errors :email2]]
@@ -504,7 +505,7 @@
                         :aria-describedby "password-error"}]]
        [component:error errors :password]]
       [:div.input
-       [:p [:label {:for "password2"} "Verify password:"]]
+       [:p [:label {:for "password2"} "Verify the password:"]]
        [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
                         :aria-describedby "password2-error"}]]
        [component:error errors :password2]]
