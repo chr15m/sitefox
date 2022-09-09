@@ -303,7 +303,7 @@ This will set up the following routes by default where you can send users to sig
 
  * `/auth/sign-in`
  * `/auth/sign-up`
- * `/auth/reset-password-form`
+ * `/auth/reset-password`
 
 It is also possible to override the default auth UI Reagent forms and the redirect URLs to customise them with your own versions.
 See the [auth documentation](https://chr15m.github.io/sitefox/sitefox.auth.html#var-setup-auth) for detail about how to supply your own Reagent forms.
