@@ -504,7 +504,7 @@
                         :aria-describedby "password-error"}]]
        [component:error errors :password]]
       [:div.input
-       [:p [:label [:for "password2"] "Verify password:"]]
+       [:p [:label {:for "password2"} "Verify password:"]]
        [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
                         :aria-describedby "password2-error"}]]
        [component:error errors :password2]]
