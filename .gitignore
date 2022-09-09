@@ -6,3 +6,4 @@ workspace
 **/.clj-kondo/.cache
 tests.js
 tests.sqlite
+database.sqlite
