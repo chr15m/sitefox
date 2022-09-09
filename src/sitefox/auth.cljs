@@ -461,14 +461,15 @@
     [:section.auth
      [:p "Enter your email and password to sign in."]
      [:form {:method "POST"}
-      [:div.input
-       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
-                        :aria-describedby "email-error"}]]
-       [component:error errors :email]]
-      [:div.input
-       [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)
-                        :aria-describedby "password-error"}]]
-       [component:error errors :password]]
+      [:div.inputs
+       [:div.input
+        [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
+                         :aria-describedby "email-error"}]]
+        [component:error errors :email]]
+       [:div.input
+        [:p [:input.fit {:name "password" :type "password" :placeholder "password" :default-value (j/get data :password)
+                         :aria-describedby "password-error"}]]
+        [component:error errors :password]]]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
       [component:messages req]
       [:div.actions
@@ -489,26 +490,27 @@
     [:section.auth
      [:p "Enter your email and desired password to sign up."]
      [:form {:method "POST"}
-      [:div.input
-       [:p [:label {:for "email"} "Enter your email:"]]
-       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
-                        :aria-describedby "email-error"}]]
-       [component:error errors :email]]
-      [:div.input
-       [:p [:label {:for "email2"} "Verify your email:"]]
-       [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (j/get data :email2)
-                        :aria-describedby "email2-error"}]]
-       [component:error errors :email2]]
-      [:div.input
-       [:p [:label {:for "password"} "Enter your desired password:"]]
-       [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)
-                        :aria-describedby "password-error"}]]
-       [component:error errors :password]]
-      [:div.input
-       [:p [:label {:for "password2"} "Verify the password:"]]
-       [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
-                        :aria-describedby "password2-error"}]]
-       [component:error errors :password2]]
+      [:div.inputs
+       [:div.input
+        [:p [:label {:for "email"} "Enter your email:"]]
+        [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
+                         :aria-describedby "email-error"}]]
+        [component:error errors :email]]
+       [:div.input
+        [:p [:label {:for "email2"} "Verify your email:"]]
+        [:p [:input.fit {:name "email2" :placeholder "Your email (again)" :default-value (j/get data :email2)
+                         :aria-describedby "email2-error"}]]
+        [component:error errors :email2]]
+       [:div.input
+        [:p [:label {:for "password"} "Enter your desired password:"]]
+        [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)
+                         :aria-describedby "password-error"}]]
+        [component:error errors :password]]
+       [:div.input
+        [:p [:label {:for "password2"} "Verify the password:"]]
+        [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
+                         :aria-describedby "password2-error"}]]
+        [component:error errors :password2]]]
       [component:messages req]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
       [:div.actions
@@ -545,13 +547,13 @@
     [:section.auth
      [:p "Please enter your email to receive a password reset link."]
      [:form {:method "POST"}
-      [:div.input
-       [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
-                        :aria-describedby "email-error"}]]
-       [component:error errors :email]]
-      [:div.input
-       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
-       [component:messages req]]
+      [:div.inputs
+       [:div.input
+        [:p [:input.fit {:name "email" :placeholder "Your email" :default-value (j/get data :email)
+                         :aria-describedby "email-error"}]]
+        [component:error errors :email]]]
+      [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [component:messages req] 
       [:div.actions
        [:ul
         [:li [:a {:href (get-named-route req "auth:sign-in")} "Sign in"]]
@@ -580,14 +582,15 @@
     [:section.auth
      [:p "Please enter a new password."]
      [:form {:method "POST"}
-      [:div.input
-       [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)
-                        :aria-describedby "password-error"}]]
-       [component:error errors :password]]
-      [:div.input
-       [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
-                        :aria-describedby "password2-error"}]]
-       [component:error errors :password2]]
+      [:div.inputs
+       [:div.input
+        [:p [:input.fit {:name "password" :type "password" :placeholder "Password" :default-value (j/get data :password)
+                         :aria-describedby "password-error"}]]
+        [component:error errors :password]]
+       [:div.input
+        [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
+                         :aria-describedby "password2-error"}]]
+        [component:error errors :password2]]]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
       [component:messages req]
       [:div.actions
