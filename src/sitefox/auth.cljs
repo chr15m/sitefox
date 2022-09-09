@@ -511,8 +511,8 @@
         [:p [:input.fit {:name "password2" :type "password" :placeholder "Password (again)" :default-value (j/get data :password2)
                          :aria-describedby "password2-error"}]]
         [component:error errors :password2]]]
-      [component:messages req]
       [:input {:name "_csrf" :type "hidden" :value csrf-token}]
+      [component:messages req]
       [:div.actions
        [:ul
         [:li [:a {:href (get-named-route req "auth:sign-in")} "Sign in"]]]
