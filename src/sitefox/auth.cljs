@@ -96,7 +96,7 @@
                             vx (encrypt-for-transit vi)
                             l (.slice vx 0 1)
                             r (.slice vx 2)
-                            replacement (if (= (aget vx 18) "X") "Z" "X")
+                            replacement (if (= (aget vx 1) "X") "Z" "X")
                             decrypted (decrypt-for-transit (str l replacement r))]
                       (is (= decrypted nil)))
                     ; test modified encrypted packet
