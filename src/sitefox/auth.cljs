@@ -54,6 +54,9 @@
     [(.toString (pbkdf2Sync pw salt 310000 32 "sha512") "hex")
      (.toString salt "hex")]))
 
+(def re-slash (js/RegExp. "/" "g"))
+(def re-plus (js/RegExp. "/" "g"))
+
 (defn encrypt-for-transit
   "Encrypts a piece of data for transit using symmetric key cryptography and the server's own secret."
   [materials]
@@ -72,8 +75,8 @@
                           #js [iv encrypted-buffer auth-tag])]
           (-> assembled
               (.toString "base64")
-              (.replaceAll "/" "_")
-              (.replaceAll "+" "-")
+              (.replace re-slash "_")
+              (.replace re-plus "-")
               res))))))
 
 (defn decrypt-for-transit
@@ -93,7 +96,7 @@
                             vx (encrypt-for-transit vi)
                             l (.slice vx 0 1)
                             r (.slice vx 2)
-                            replacement (if (= (aget vx 18) "X") "Z" "X")
+                            replacement (if (= (aget vx 1) "X") "Z" "X")
                             decrypted (decrypt-for-transit (str l replacement r))]
                       (is (= decrypted nil)))
                     ; test modified encrypted packet

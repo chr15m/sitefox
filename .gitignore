@@ -1,5 +1,4 @@
 .*.swp
-.*
 node_modules
 package-lock.json
 workspace
@@ -7,3 +6,6 @@ workspace
 tests.js
 tests.sqlite
 database.sqlite
+.cpcache
+.shadow-cljs
+.lsp

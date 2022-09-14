@@ -1,0 +1,59 @@
+# Lifted from github.com/squint-cljs/cherry
+
+name: Tests
+
+on: [push, pull_request]
+
+env:
+  SECRET: testing
+  TESTING: 1
+  DATABASE_URL: sqlite://./tests.sqlite
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest] # windows-latest
+        version: [12, 14, 15, 16]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: "Checkout code"
+      uses: "actions/checkout@v2"
+
+    - name: Set up node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.version }}
+
+    - name: Prepare java
+      uses: actions/setup-java@v2
+      with:
+        distribution: "adopt"
+        java-version: 11
+
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: 1.10.3.1040
+
+    - name: Cache clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        # List all files containing dependencies:
+        key: cljdeps-${{ hashFiles('shadow-cljs.edn') }}
+        # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        # key: cljdeps-${{ hashFiles('project.clj') }}
+        # key: cljdeps-${{ hashFiles('build.boot') }}
+        restore-keys: cljdeps-
+
+    - name: Install Node deps
+      run: npm i
+
+    - name: Run the tests
+      run: npm run test
