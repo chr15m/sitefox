@@ -4,6 +4,11 @@ name: Tests
 
 on: [push, pull_request]
 
+env:
+  SECRET: testing
+  TESTING: 1
+  DATABASE_URL: sqlite://./tests.sqlite
+
 jobs:
   test:
     strategy:
@@ -46,12 +51,6 @@ jobs:
         # key: cljdeps-${{ hashFiles('project.clj') }}
         # key: cljdeps-${{ hashFiles('build.boot') }}
         restore-keys: cljdeps-
-
-    - name: Set environment variables
-      env:
-        SECRET: testing
-        TESTING: 1
-        DATABASE_URL: sqlite://./tests.sqlite
 
     - name: Install Node deps
       run: npm i
