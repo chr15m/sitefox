@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest] # windows-latest
-        version: [10, 12, 14, 15, 16]
+        version: [14]
 
     runs-on: ${{ matrix.os }}
 
