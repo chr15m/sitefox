@@ -47,6 +47,8 @@ jobs:
         # key: cljdeps-${{ hashFiles('build.boot') }}
         restore-keys: cljdeps-
 
-    - name: Run tests
+    - name: Install Node deps
       run: npm i
+
+    - name: Run the tests
       run: npm run tests
