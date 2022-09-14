@@ -9,12 +9,18 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest] # windows-latest
+        version: [10, 12, 14, 15, 16]
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - name: "Checkout code"
       uses: "actions/checkout@v2"
+
+    - name: Set up node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.version }}
 
     - name: Prepare java
       uses: actions/setup-java@v2
@@ -23,33 +29,24 @@ jobs:
         java-version: 11
 
     - name: Setup Clojure
-      uses: DeLaGuardo/setup-clojure@9.3
+      uses: DeLaGuardo/setup-clojure@9.5
       with:
         cli: 1.10.3.1040
 
-      - name: Cache clojure dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.gitlibs
-            ~/.deps.clj
-          # List all files containing dependencies:
-          key: cljdeps-${{ hashFiles('shadow-cljs.edn') }}
-          # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
-          # key: cljdeps-${{ hashFiles('project.clj') }}
-          # key: cljdeps-${{ hashFiles('build.boot') }}
-          restore-keys: cljdeps-
+    - name: Cache clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        # List all files containing dependencies:
+        key: cljdeps-${{ hashFiles('shadow-cljs.edn') }}
+        # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        # key: cljdeps-${{ hashFiles('project.clj') }}
+        # key: cljdeps-${{ hashFiles('build.boot') }}
+        restore-keys: cljdeps-
 
-    strategy:
-      matrix:
-        node-version: [10.x, 12.x, 14.x, 15.x]
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm install
-      - run: npm run test
+    - name: Run tests
+      run: npm i
+      run: npm run tests
