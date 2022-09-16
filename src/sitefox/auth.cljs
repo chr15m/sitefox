@@ -16,7 +16,7 @@
     [promesa.core :as p]
     ["crypto" :refer [createHash createHmac randomBytes pbkdf2Sync scryptSync createCipheriv createDecipheriv]]
     [sitefox.util :refer [env]]
-    [sitefox.html :refer [render direct-to-template]]
+    [sitefox.html :refer [render-anything direct-to-template]]
     [sitefox.db :refer [kv]]
     [sitefox.mail :refer [send-email]]
     [sitefox.web :refer [is-post? build-absolute-uri name-route get-named-route]]))
@@ -293,7 +293,7 @@
                         :t time-stamp}
                 encrypted-packet (encrypt-for-transit (-> packet clj->js js/JSON.stringify))
                 verify-url (str (build-absolute-uri req (get-named-route req "auth:verify-sign-up")) "?v=" encrypted-packet)
-                email-html (render [email-view-component req verify-url])
+                email-html (render-anything (email-view-component req verify-url))
                 email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
                                                        :uppercaseHeadings false})
                 email-subject (or email-subject (str hostname " sign-up verification"))
@@ -361,7 +361,7 @@
                         :t time-stamp}
                 encrypted-packet (encrypt-for-transit (-> packet clj->js js/JSON.stringify))
                 verify-url (str (build-absolute-uri req (get-named-route req "auth:reset-password-form")) "?v=" encrypted-packet)
-                email-html (render [reset-password-email-component req verify-url])
+                email-html (render-anything (reset-password-email-component req verify-url))
                 email-text (htmlToText email-html #js {:hideLinkHrefIfSameAsText true
                                                        :uppercaseHeadings false})
                 email-subject (or email-subject (str hostname " reset password link"))
@@ -521,7 +521,7 @@
         [:li [:a {:href (get-named-route req "auth:sign-in")} "Sign in"]]]
        [:button.primary {:type "submit"} "Sign up"]]]]))
 
-(defn component:sign-up-email [req verify-url]
+(defn callback:sign-up-email [req verify-url]
   [:div
    [:h1 {:align "center"} "Signup verification"]
    [:p {:align "center"} "Click the link to verify your signup at " (aget req "hostname")]
@@ -563,7 +563,7 @@
         [:li [:a {:href (get-named-route req "auth:sign-up")} "Sign up"]]]
        [:button.primary {:type "submit"} "Reset password"]]]]))
 
-(defn component:reset-password-email [req verify-url]
+(defn callback:reset-password-email [req verify-url]
   [:div
    [:h1 {:align "center"} "Reset password link"]
    [:p {:align "center"} "Click the link to reset your password at " (aget req "hostname")]
@@ -625,7 +625,7 @@
   * `:sign-in-redirect` is the URL to redirect to after signing in (defaults to `/`).
   * `:sign-up-redirect` is the URL to redirect to after signing up successfully (defaults to `/`).
   * `:sign-in-form-component` is a Reagent component to render the sign-in form (defaults to `component:sign-in-form`).
-  * `:sign-up-email-component` is a Reagent component to render the sign-up validation email (defaults to `component:sign-up-email`).
+  * `:sign-up-email-callback` is a function used to render the sign-up validation email (defaults to `callback:sign-up-email` reagent form). The function will be passed `req` (express request object) and `verify-url` as arguments and may return a Reagent form or an HTML string.
   * `:sign-up-email-subject` the subject line of the sign up verification email (defaults to `req.hostname + ' signup email.'`).
   * `:sign-up-form-component` is a Reagent component to render the sign-up form (defaults to `component:sign-up-form`).
   * `:sign-up-form-done-component` is a Reagent component to render the sign-up done page (defaults to `component:sign-up-form-done`).
@@ -634,7 +634,7 @@
    & {:keys [sign-in-redirect
              sign-in-form-component
              sign-up-redirect
-             sign-up-email-component sign-up-email-subject sign-up-from-address
+             sign-up-email-callback sign-up-email-subject sign-up-from-address
              sign-up-form-component sign-up-form-done-component
              simple-message-component]}]
   (j/call passport :use (LocalStrategy. #js {:usernameField "email"} verify-kv-email-user))
@@ -644,7 +644,7 @@
           (fn [req res] (direct-to-template res template selector [(or sign-in-form-component component:sign-in-form) req])))
   (j/call app :use (name-route app "/auth/sign-up" "auth:sign-up")
           middleware:sign-up-submit
-          (make-middleware:sign-up-email (or sign-up-email-component component:sign-up-email) sign-up-email-subject sign-up-from-address)
+          (make-middleware:sign-up-email (or sign-up-email-callback callback:sign-up-email) sign-up-email-subject sign-up-from-address)
           (fn [req res]
             (let [sign-up-email-sent (j/get-in req [:auth :sign-up-email-sent])
                   view-component (if sign-up-email-sent
@@ -664,6 +664,7 @@
   You can override various aspects of the UI using these keys:
 
   * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
+  * `:reset-password-email-callback` is a function used to render the reset password validation email (defaults to `callback:reset-password-email` reagent form). The function will be passed `req` (express request object) and `verify-url` as arguments and may return a Reagent form or an HTML string.
   * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
   * `:reset-password-form-component` is a Reagent component to render the reset-password form (defaults to `component:reset-password-form`).
   * `:simple-message-component` is a Reagent component to render error messages during the password reset process (defaults to `component:simple-message-component`)."
@@ -671,7 +672,7 @@
    & {:keys [reset-password-redirect
              reset-password-email-subject
              reset-password-from-address
-             reset-password-email-component
+             reset-password-email-callback
              reset-password-email-form-component
              reset-password-email-form-done-component
              reset-password-form-component
@@ -679,7 +680,7 @@
   (j/call app :use (name-route app "/auth/reset-password" "auth:reset-password")
           middleware:reset-password-email-submit
           (make-middleware:reset-password-send-email
-            (or reset-password-email-component component:reset-password-email)
+            (or reset-password-email-callback callback:reset-password-email)
             reset-password-email-subject reset-password-from-address)
           (fn [req res done]
             (let [validation-errors (j/get req :errors)]
