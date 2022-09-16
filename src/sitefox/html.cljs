@@ -24,6 +24,7 @@
   "Render anything to HTML.
    If `source` is a Reagent form, `render-to-static-markup` is used.
    If `source` is a jsdom HTMLElement or other type of object `.toString` is used.
+   If `source` is a fn it will be called with any args that were passed.
    If `source` is already a string it is passed through with no change."
   {:test (fn []
            (let [string-html "<div id=\"thing\">Hi</div>"
@@ -32,10 +33,11 @@
              (is (= (render-anything string-html) string-html))
              (is (= (render-anything el-html) string-html))
              (is (= (render-anything reagent-html) string-html))))}
-  [source]
+  [source & args]
   (cond
     (vector? source) (render source)
     (string? source) source
+    (fn? source) (apply source args)
     :else (.toString source)))
 
 (defn select-apply
