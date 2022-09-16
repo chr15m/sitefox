@@ -7,7 +7,7 @@
    [sitefox.deps :refer [parse-html]]))
 
 (defn parse "Shorthand for [`node-html-parser`'s `parse` function](https://www.npmjs.com/package/node-html-parser#usage).
-            Returns a dom-like document object that can be manipulated as in the browser."
+            Returns a dom-like document object (HTMLElement) that can be manipulated as in the browser."
   [html-string] (parse-html html-string))
 
 (defn $ "Shorthand for CSS style `querySelector` on parsed HTML `element`
@@ -19,6 +19,24 @@
   [element selector] (.querySelectorAll element selector))
 
 (defn render "Shorthand for Reagent's `render-to-static-markup`." [form] (r form))
+
+(defn render-anything
+  "Render anything to HTML.
+   If `source` is a Reagent form, `render-to-static-markup` is used.
+   If `source` is a jsdom HTMLElement or other type of object `.toString` is used.
+   If `source` is already a string it is passed through with no change."
+  {:test (fn []
+           (let [string-html "<div id=\"thing\">Hi</div>"
+                 el-html (parse string-html)
+                 reagent-html [:div {:id "thing"} "Hi"]]
+             (is (= (render-anything string-html) string-html))
+             (is (= (render-anything el-html) string-html))
+             (is (= (render-anything reagent-html) string-html))))}
+  [source]
+  (cond
+    (vector? source) (render source)
+    (string? source) source
+    :else (.toString source)))
 
 (defn select-apply
   "Parse `template` if it is a string and then run each of selector-applications on it.
