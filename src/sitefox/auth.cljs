@@ -55,7 +55,7 @@
      (.toString salt "hex")]))
 
 (def re-slash (js/RegExp. "/" "g"))
-(def re-plus (js/RegExp. "/" "g"))
+(def re-plus (js/RegExp. "[+]" "g"))
 
 (defn encrypt-for-transit
   "Encrypts a piece of data for transit using symmetric key cryptography and the server's own secret."
