@@ -61,6 +61,7 @@
                             two-test (set (map second (subvec fixture 2 4)))]
                       (is (= (set one) one-test))
                       (is (= (set two) two-test))
+                      (.clear d)
                       (done)))))}
   [kv-ns & [pre db filter-function]]
   ; TODO: run the map & filter over each row streaming out
@@ -92,6 +93,7 @@
                             two-test (set (filter filter-fn (map second (subvec fixture 3 6))))]
                       (is (= (set one) one-test))
                       (is (= (set two) two-test))
+                      (.clear d)
                       (done)))))}
   [kv-ns filter-function & [pre db]]
   (ls kv-ns pre db filter-function))
