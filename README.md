@@ -76,7 +76,7 @@ Add Sitefox to your project as a dependency:
 
 ```
 {:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.12" :git/sha "331dce6eb031c47a63855d508184fe34603a4a74"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.13" :git/sha "39c7d80886d11e2459e56a1b9e2976000cde3be2"}}}
 ```
 
 If you're using `npm` you can install sitefox as a dependency that way.
@@ -85,6 +85,16 @@ If you do that you will need to add `node_modules/sitefox/src` to your classpath
 ```
 npm i sitefox
 ```
+
+**Note**: M1 Mac users may need to set the Python version in npm like this:
+
+```
+npm config set python python3
+```
+
+This is because the `node-sqlite3` build sometimes fails without the setting.
+See [this issue](https://github.com/chr15m/sitefox/issues/20#issuecomment-1248719076) for more details.
+
 
 ### Example server
 
