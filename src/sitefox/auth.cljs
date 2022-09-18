@@ -626,7 +626,8 @@
   * `:sign-up-redirect` is the URL to redirect to after signing up successfully (defaults to `/`).
   * `:sign-in-form-component` is a Reagent component to render the sign-in form (defaults to `component:sign-in-form`).
   * `:sign-up-email-callback` is a function used to render the sign-up validation email (defaults to `callback:sign-up-email` reagent form). The function will be passed `req` (express request object) and `verify-url` as arguments and may return a Reagent form or an HTML string.
-  * `:sign-up-email-subject` the subject line of the sign up verification email (defaults to `req.hostname + ' signup email.'`).
+  * `:sign-up-email-subject` the subject line of the sign up verification email (defaults to req.hostname + ` signup email.`).
+  * `:sign-up-from-address` the 'From' address where the email originates from (defaults to `FROM_ADDRESS` env var).
   * `:sign-up-form-component` is a Reagent component to render the sign-up form (defaults to `component:sign-up-form`).
   * `:sign-up-form-done-component` is a Reagent component to render the sign-up done page (defaults to `component:sign-up-form-done`).
   * `:simple-message-component` is a Reagent component to render error messages during the verification stage (defaults to `component:simple-message`)."
@@ -663,9 +664,12 @@
 
   You can override various aspects of the UI using these keys:
 
-  * `:reset-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
+  * `:reset-password-redirect` is the URL to redirect to after the password has been reset successfully (defaults to `/`).
+  * `:reset-password-email-subject` the subject line of the reset password email (defaults to req.hostname + ` reset password link.`).
+  * `:reset-password-from-address` the 'From' address where the email originates from (defaults to `FROM_ADDRESS` env var).
   * `:reset-password-email-callback` is a function used to render the reset password validation email (defaults to `callback:reset-password-email` reagent form). The function will be passed `req` (express request object) and `verify-url` as arguments and may return a Reagent form or an HTML string.
   * `:reset-password-email-form-component` is a Reagent component to render the reset-password email form (defaults to `component:reset-password-email-form`).
+  * `:reset-password-email-form-done-component` is a Reagent component to render the final page of the reset password flow (defaults to ` component:reset-password-email-form-done`).
   * `:reset-password-form-component` is a Reagent component to render the reset-password form (defaults to `component:reset-password-form`).
   * `:simple-message-component` is a Reagent component to render error messages during the password reset process (defaults to `component:simple-message-component`)."
   [app template selector
