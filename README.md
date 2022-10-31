@@ -335,7 +335,7 @@ The `applied-science.js-interop` library is convenient for this (required here a
   (auth/save-user user))
 ```
 
-If you want to create a new table it is useful to key it on the user's uuid which you can obtain with `(:id user)`.
+If you want to create a new table it is useful to key it on the user's uuid which you can obtain with `(aget user "id")`.
 
 See the [authentication example](https://github.com/chr15m/sitefox/tree/main/examples/authentication) for more detail.
 
