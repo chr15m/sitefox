@@ -35,7 +35,7 @@
 <li><a href="#authentication">Authentication</a></li>
 <li><a href="#email">Email</a></li>
 <li><a href="#forms">Forms</a></li>
-<li><a href="#logging">Logging</a></li>
+<li><a href="#logging-and-errors">Logging</a></li>
 <li><a href="#live-reloading">Live reloading</a></li>
 </ul>
 <h3><a href="#environment-variables" id="environment-variables"></a>Environment variables</h3>
@@ -57,11 +57,15 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.13" :git/sha "39c7d80886d11e2459e56a1b9e2976000cde3be2"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.14" :git/sha "026cc8df517db580fc180c10a4e9e414b8da44f3"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
 </code></pre>
+<p><strong>Note</strong>: M1 Mac users may need to set the Python version in npm like this:</p>
+<pre><code>npm config set python python3
+</code></pre>
+<p>This is because the <code>node-sqlite3</code> build sometimes fails without the setting. See <a href="https://github.com/chr15m/sitefox/issues/20#issuecomment-1248719076">this issue</a> for more details.</p>
 <h3><a href="#example-server" id="example-server"></a>Example server</h3>
 <p>An example server with two routes, one of which writes values to the key-value database.</p>
 <pre><code class="language-clojure">(ns my.server
@@ -161,6 +165,7 @@
 <p>Also see the <a href="https://github.com/chr15m/sitefox/tree/main/examples/templates">templates example</a> project.</p>
 <h3><a href="#database" id="database"></a>Database</h3>
 <p>Sitefox makes it easy to start storing key-value data with no configuration. You can transition to more structured data later if you need it. It bundles <a href="https://github.com/lukechilds/keyv">Keyv</a> which is a database backed key-value store. You can access the key-value store through <code>db/kv</code> and the underlying database through <code>db/client</code>.</p>
+<p>See the full <a href="https://chr15m.github.io/sitefox/sitefox.db.html">documentation for the db module</a>.</p>
 <p>By default a local sqlite database is used and you can start persisting data on the server immediately without any configuration. Once you move to production you can configure another database using the environment variable <code>DATABASE_URL</code>. For example, to use a postgres database called “somedatabase”:</p>
 <pre><code>DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase
 </code></pre>
@@ -218,7 +223,7 @@
   (j/assoc! user :somekey 42)
   (auth/save-user user))
 </code></pre>
-<p>If you want to create a new table it is useful to key it on the user’s uuid which you can obtain with <code>(:id user)</code>.</p>
+<p>If you want to create a new table it is useful to key it on the user’s uuid which you can obtain with <code>(aget user "id")</code>.</p>
 <p>See the <a href="https://github.com/chr15m/sitefox/tree/main/examples/authentication">authentication example</a> for more detail.</p>
 <p>To add a new authentication scheme such as username based, or 3rd party oauth, consult the <a href="https://www.passportjs.org/">Passport docs</a> and <a href="https://github.com/chr15m/sitefox/blob/main/src/sitefox/auth.cljs#L210">auth.cljs</a>. Pull requests most welcome!</p>
 <h3><a href="#email" id="email"></a>Email</h3>
@@ -241,19 +246,33 @@
 <pre><code class="language-clojure">[:input {:name "_csrf" :type "hidden" :default-value (.csrfToken req)}]
 </code></pre>
 <p>If you’re making an ajax <code>POST</code> request from the client side, you should pass the CSRF token as a header. A valid token is available in the document’s cookie and you can add it to the headers of a fetch request as follows:</p>
-<pre><code class="language-clojure">(js/fetch \"/api/endpoint\"
-          #js {:method \"POST\"
-               :headers #js {:Content-Type \"application/json\"
+<pre><code class="language-clojure">(ns n (:require [sitefox.ui :refer [csrf-token]]))
+
+(js/fetch "/api/endpoint"
+          #js {:method "POST"
+               :headers #js {:Content-Type "application/json"
                              :XSRF-Token (csrf-token)}
                              :body (js/JSON.stringify (clj-&gt;js data))})
 </code></pre>
-<h3><a href="#logging" id="logging"></a>Logging</h3>
+<h3><a href="#logging-and-errors" id="logging-and-errors"></a>Logging and errors</h3>
 <p>By default the web server will write to log files in the <code>./logs</code> folder. These files are automatically rotated by the server. There are two types of logs:</p>
 <ul>
 <li><code>logs/access.log</code> which are standard web access logs in “combined” format.</li>
 <li><code>logs/error.log</code> where <code>console.log</code> and <code>console.error</code> is written (and duplicated to stdout).</li>
 </ul>
 <p>Note: the <code>error.log</code> is not written by default, you need to enable it by calling <code>(logging/bind-console-to-file)</code>. This will rebind stdout to “tee” into the logfile <code>./logs/error.log</code> as well as printing to stdout.</p>
+<h4><a href="#404-and-500-errors" id="404-and-500-errors"></a>404 and 500 errors</h4>
+<p>You can use the <a href="https://chr15m.github.io/sitefox/sitefox.db.html#var-setup-error-handler"><code>web/setup-error-handler</code></a> function to serve a page for those errors based on a Reagent component you define:</p>
+<pre><code class="language-clojure">(defn component-error-page [_req error-code error]
+  [:section.error
+   [:h2 error-code " Error"]
+   (case error-code
+     404 [:p "We couldn't find the page you're looking for."]
+     500 [:&lt;&gt; [:p "An error occurred:"] [:p (.toString error)]]
+     [:div "An unknown error occurred."])])
+
+(web/setup-error-handler app my-html-template "main" component-error-page)
+</code></pre>
 <h4><a href="#tracebacks" id="tracebacks"></a>Tracebacks</h4>
 <p>If an error occurs in a running server in production it can be useful to have the traceback emailed to somebody. You can tell Sitefox to email all tracebacks using <code>install-traceback-emailer</code> from <code>sitefox.tracebacks</code>:</p>
 <pre><code>(install-traceback-emailer (env "ADMIN_EMAIL"))
