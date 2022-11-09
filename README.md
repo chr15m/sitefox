@@ -40,7 +40,7 @@ Battle tested on real sites.
  * [Authentication](#authentication)
  * [Email](#email)
  * [Forms](#forms)
- * [Logging](#logging)
+ * [Logging](#logging-and-errors)
  * [Live reloading](#live-reloading)
 
 ### Environment variables
@@ -388,7 +388,7 @@ If you're making an ajax `POST` request from the client side, you should pass th
                              :body (js/JSON.stringify (clj->js data))})
 ```
 
-### Logging
+### Logging and errors
 
 By default the web server will write to log files in the `./logs` folder.
 These files are automatically rotated by the server. There are two types of logs:
@@ -398,6 +398,23 @@ These files are automatically rotated by the server. There are two types of logs
 
 Note: the `error.log` is not written by default, you need to enable it by calling `(logging/bind-console-to-file)`.
 This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as printing to stdout.
+
+#### 404 and 500 errors
+
+You can use the [`web/setup-error-handler`](https://chr15m.github.io/sitefox/sitefox.db.html#var-setup-error-handler)
+function to serve a page for those errors based on a Reagent component you define:
+
+```clojure
+(defn component-error-page [_req error-code error]
+  [:section.error
+   [:h2 error-code " Error"]
+   (case error-code
+     404 [:p "We couldn't find the page you're looking for."]
+     500 [:<> [:p "An error occurred:"] [:p (.toString error)]]
+     [:div "An unknown error occurred."])])
+
+(web/setup-error-handler app my-html-template "main" component-error-page)
+```
 
 #### Tracebacks
 

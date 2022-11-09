@@ -8,7 +8,8 @@
     ["path" :as path]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
-    [sitefox.deps :refer [express cookies body-parser serve-static session morgan csrf]]))
+    [sitefox.deps :refer [express cookies body-parser serve-static session morgan csrf]]
+    [sitefox.html :refer [direct-to-template]]))
 
 (def ^:no-doc server-dir (or js/__dirname "./"))
 
@@ -154,3 +155,30 @@
   "Retrieve a route that has previously been named."
   [req route-name]
   (j/get-in req [:app :named-routes route-name]))
+
+(defn setup-error-handler
+  "Sets up an express route to handle 404 and 500 errors.
+  Pass it the express `app`, an HTML string `template`, query `selector` and a Reagent `view-component`.
+  The error `view-component` will be rendered and inserted into the template at `selector`.
+
+  The error component will receive three arguments:
+  * `req` - the express request object.
+  * `error-code` - the exact error code that occurred (e.g. 404, 500 etc.).
+  * `error` - the error object (if any) that was propagated.
+
+  Example:
+
+  `(make-error-handler app my-template \"main\" my-error-component)`"
+  [app template selector view-component]
+  ; handle 404 errors
+  (j/call app :use
+          (fn [req res]
+            (-> res
+                (.status 404)
+                (direct-to-template template selector [view-component req 404]))))
+  ; handle 500 errors
+  (j/call app :use
+          (fn [error req res _done]
+            (-> res
+                (.status 500)
+                (direct-to-template template selector [view-component req 500 error])))))
