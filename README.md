@@ -230,6 +230,8 @@ You can transition to more structured data later if you need it.
 It bundles [Keyv](https://github.com/lukechilds/keyv) which is a database backed key-value store.
 You can access the key-value store through `db/kv` and the underlying database through `db/client`.
 
+See the full [documentation for the db module](https://chr15m.github.io/sitefox/sitefox.db.html).
+
 By default a local sqlite database is used and you can start persisting data on the server immediately without any configuration.
 Once you move to production you can configure another database using the environment variable `DATABASE_URL`.
 For example, to use a postgres database called "somedatabase":
@@ -381,9 +383,11 @@ To ensure you can `POST` without CSRF warnings you should create a hidden elemen
 If you're making an ajax `POST` request from the client side, you should pass the CSRF token as a header. A valid token is available in the document's cookie and you can add it to the headers of a fetch request as follows:
 
 ```clojure
-(js/fetch \"/api/endpoint\"
-          #js {:method \"POST\"
-               :headers #js {:Content-Type \"application/json\"
+(ns n (:require [sitefox.ui :refer [csrf-token]]))
+
+(js/fetch "/api/endpoint"
+          #js {:method "POST"
+               :headers #js {:Content-Type "application/json"
                              :XSRF-Token (csrf-token)}
                              :body (js/JSON.stringify (clj->js data))})
 ```
