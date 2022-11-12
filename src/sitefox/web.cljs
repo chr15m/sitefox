@@ -106,20 +106,20 @@
   [app]
   (let [host (env "BIND_ADDRESS" "127.0.0.1")
         port (env "PORT" "8000")
-        srv (.bind (aget app "listen") app port host)]
+        server (.bind (aget app "listen") app port host)]
     (js/Promise.
       (fn [res _err]
-        (srv #(res [host port]))))))
+        (server #(res [host port server]))))))
 
 (defn start
   "Create a new express app and start serving it.
   Runs (create) and then (serve) on the result.
-  Returns a promise which resolves with [app host port] once the server is running."
+  Returns a promise which resolves with [app host port server] once the server is running."
   []
   (let [app (create)]
     (->
       (serve app)
-      (.then (fn [[host port]] [app host port])))))
+      (.then (fn [[host port server]] [app host port server])))))
 
 (defn build-absolute-uri
   "Creates an absolute URL including host and port.
