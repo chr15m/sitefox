@@ -5,6 +5,7 @@
     [sitefox.db :as db]
     [promesa.core :as p]
     [applied-science.js-interop :as j]
+    ["http" :as http]
     ["path" :as path]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
@@ -106,10 +107,12 @@
   [app]
   (let [host (env "BIND_ADDRESS" "127.0.0.1")
         port (env "PORT" "8000")
-        server (.bind (aget app "listen") app port host)]
-    (js/Promise.
-      (fn [res _err]
-        (server #(res [host port server]))))))
+        server (.createServer http app)]
+    (->
+      (js/Promise.
+        (fn [res _err]
+          (.listen server port host
+                   #(res [host port server])))))))
 
 (defn start
   "Create a new express app and start serving it.
