@@ -363,8 +363,13 @@ Then you can use the `send-email` function as follows:
     (.then js/console.log))
 ```
 
+By default sent emails are logged to `./logs/mail.log` in json-lines format.
+
 If you don't specify an SMTP server, the email module will be in debug mode.
-No emails will be sent and the ethereal.email service will be used.
+No emails will be sent, outgoing emails will be written to `/tmp` for inspection,
+and `send-email` outcomes will also be logged to the console.
+
+If you set `SMTP_SERVER=ethereal` the ethereal.email service will be used.
 After running `send-email` you can print the `url` property of the result.
 You can use the links that are printed for testing your emails in dev mode.
 
