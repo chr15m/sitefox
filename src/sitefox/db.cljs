@@ -70,7 +70,8 @@
     (.then #(.map % (fn [row]
                       (let [k (aget row "key")
                             v (aget (js/JSON.parse (aget row "value")) "value")]
-                        (aset v "kind" k)
+                        (when (= (type v) js/Object)
+                          (aset v "kind" k))
                         v))))
     (.then (if filter-function
              #(.filter % filter-function)
