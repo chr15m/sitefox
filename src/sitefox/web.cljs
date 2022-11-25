@@ -161,7 +161,18 @@
 
 (defn setup-error-handler
   "Sets up an express route to handle 404 and 500 errors.
+  This must be the last handler in your server:
+
+  ```clojure
+  (defn setup-routes [app]
+    (web/reset-routes app)
+    ; ... other routes
+    ; 404 and 500 error handling
+    (web/setup-error-handler app template \"main\" component-error-page email-error-callback))
+  ```
+
   Pass it the express `app`, an HTML string `template`, query `selector` and a Reagent `view-component`.
+  Optionally pass `callback` which will be called on every 500 error with args `req`, `error`.
   The error `view-component` will be rendered and inserted into the template at `selector`.
 
   The error component will receive three arguments:
@@ -171,8 +182,12 @@
 
   Example:
 
-  `(make-error-handler app my-template \"main\" my-error-component)`"
-  [app template selector view-component]
+  `(make-error-handler app my-template \"main\" my-error-component)`
+
+  To have all 500 errors emailed to you use `tracebacks/make-500-error-emailer` as the `callback` argument:
+
+  `(make-500-error-emailer (env \"ADMIN_EMAIL\"))`"
+  [app template selector view-component & [callback]]
   ; handle 404 errors
   (j/call app :use
           (fn [req res]
@@ -184,4 +199,6 @@
           (fn [error req res _done]
             (-> res
                 (.status 500)
-                (direct-to-template template selector [view-component req 500 error])))))
+                (direct-to-template template selector [view-component req 500 error]))
+            (when callback
+              (callback req error)))))
