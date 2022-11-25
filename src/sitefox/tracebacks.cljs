@@ -35,7 +35,6 @@
   (fn [req error]
     (when email-address
       (js/console.error error)
-      (js/console.error (type error))
       (send-email email-address email-address
                   (str "Sitefox traceback on " (build-absolute-uri req "/"))
                   :text (str
