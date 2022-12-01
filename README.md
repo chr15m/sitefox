@@ -403,10 +403,22 @@ By default the web server will write to log files in the `./logs` folder.
 These files are automatically rotated by the server. There are two types of logs:
 
  * `logs/access.log` which are standard web access logs in "combined" format.
- * `logs/error.log` where `console.log` and `console.error` is written (and duplicated to stdout).
+ * `logs/error.log` where tracebacks are written using `tracebacks/install-traceback-handler`.
 
-Note: the `error.log` is not written by default, you need to enable it by calling `(logging/bind-console-to-file)`.
-This will rebind stdout to "tee" into the logfile `./logs/error.log` as well as printing to stdout.
+To send uncaught exceptions to the error log:
+
+```
+(def admin-email (env-required "ADMIN_EMAIL"))
+(def build-id (try (fs/readFileSync "build-id.txt") (catch :default _e "dev")))
+
+(install-traceback-handler admin-email build-id)
+```
+
+Create `build-id.txt` based on the current git commit as follows:
+
+```
+git rev-parse HEAD | cut -b -8 > build-id.txt
+```
 
 #### 404 and 500 errors
 
@@ -425,23 +437,21 @@ function to serve a page for those errors based on a Reagent component you defin
 (web/setup-error-handler app my-html-template "main" component-error-page)
 ```
 
-#### Tracebacks
-
-If an error occurs in a running server in production it can be useful to have the traceback emailed to somebody.
-You can tell Sitefox to email all tracebacks using `install-traceback-emailer` from `sitefox.tracebacks`:
+You can combine these to catch both 500 Internal Server errors and uncaught exceptions as follow:
 
 ```
-(install-traceback-emailer (env "ADMIN_EMAIL"))
+(let [traceback-handler (install-traceback-handler admin-email build-id)]
+    (web/setup-error-handler app template-app "main" component-error-page traceback-handler))
 ```
-
-Set the `ADMIN_EMAIL` environment variable to the email address where you want tracebacks to be sent.
-You can also specify an email as a string.
 
 ### Live reloading
 
-Live reloading is supported using both `nbb` and `shadow-cljs`. It is enabled by default when using the npm create scripts. Examples have more details.
+Live reloading is supported using both `nbb` and `shadow-cljs`.
+It is enabled by default when using the npm create scripts.
+Examples have more details.
 
 ## Who
 
-Sitefox was made by [Chris McCormick](https://mccormick.cx) ([@mccrmx](https://twitter.com/mccrmx)).
+Sitefox was made by [Chris McCormick](https://mccormick.cx)
+([@mccrmx on Twitter](https://twitter.com/mccrmx) and [@chris@mccormick.cx on Mastodon](https://mccormick.cx/@chris)).
 I iterated on it while building sites for myself and for clients.

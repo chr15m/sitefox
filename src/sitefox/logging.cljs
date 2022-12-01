@@ -6,7 +6,9 @@
     [applied-science.js-interop :as j]
     ["rotating-file-stream" :as rfs]))
 
-(defn flush-bound-console [cb]
+(defn flush-bound-console
+  "This is deprecated in favour of `tracebacks/install-traceback-handler`."
+  [cb]
   ; https://github.com/winstonjs/winston/issues/228
   (let [error-log (aget js/console "_logstream")]
     (if error-log
@@ -18,7 +20,8 @@
       (cb))))
 
 (defn bind-console-to-file
-  "Rebinds `console.log` and `console.error` so that they write to `./logs/error.log` as well as stdout."
+  "This is deprecated in favour of `tracebacks/install-traceback-handler`.
+  Rebinds `console.log` and `console.error` so that they write to `./logs/error.log` as well as stdout."
   []
   (when (not (aget js/console "_logstream"))
     (let [logs (str js/__dirname "/logs")
