@@ -4,7 +4,7 @@
 
 (defonce state (r/atom {}))
 
-(defn button-clicked [ev]
+(defn button-clicked [_ev]
   (swap! state update-in [:number] inc))
 
 (defn component-main [state]

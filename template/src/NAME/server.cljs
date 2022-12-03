@@ -3,12 +3,8 @@
     ["fs" :as fs]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
-    [sitefox.util :refer [env]]
     [sitefox.html :refer [render-into]]
-    [sitefox.web :as web]
-    [sitefox.logging :refer [bind-console-to-file]]))
-
-(bind-console-to-file)
+    [sitefox.web :as web]))
 
 (defonce server (atom nil))
 
