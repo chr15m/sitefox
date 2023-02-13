@@ -1,7 +1,7 @@
 {:npm-deps
  {"passport-local" "1.0.0",
   "html-to-text" "8.1.0",
-  "rotating-file-stream" "2.1.6",
+  "rotating-file-stream" "3.0.4",
   "node-html-parser" "4.1.5",
   "json-stringify-safe" "5.0.1",
   "nodemailer" "6.6.5",
@@ -12,6 +12,7 @@
   "sqlite3" "5.0.2",
   "express" "4.17.1",
   "csurf" "1.11.0",
+  "tmp" "^0.2.1",
   "express-session" "1.17.2", 
   "keyv" "4.2.2", 
   "@keyv/sqlite" "3.5.0"}}
