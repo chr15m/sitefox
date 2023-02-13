@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.14" :git/sha "026cc8df517db580fc180c10a4e9e414b8da44f3"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.15" :git/sha "e8c373a828f695398e382e6b27b09ec529e54c90"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -238,7 +238,9 @@
       :text "Hello, This is my first email from **Sitefox**. Thank you.")
     (.then js/console.log))
 </code></pre>
-<p>If you don’t specify an SMTP server, the email module will be in debug mode. No emails will be sent and the ethereal.email service will be used. After running <code>send-email</code> you can print the <code>url</code> property of the result. You can use the links that are printed for testing your emails in dev mode.</p>
+<p>By default sent emails are logged to <code>./logs/mail.log</code> in json-lines format.</p>
+<p>If you don’t specify an SMTP server, the email module will be in debug mode. No emails will be sent, outgoing emails will be written to <code>/tmp</code> for inspection, and <code>send-email</code> outcomes will also be logged to the console.</p>
+<p>If you set <code>SMTP_SERVER=ethereal</code> the ethereal.email service will be used. After running <code>send-email</code> you can print the <code>url</code> property of the result. You can use the links that are printed for testing your emails in dev mode.</p>
 <p>Also see the <a href="https://github.com/chr15m/sitefox/tree/main/examples/send-email">send-email example</a> project.</p>
 <h3><a href="#forms" id="forms"></a>Forms</h3>
 <p>See the <a href="https://github.com/chr15m/sitefox/tree/main/examples/form-validation">form validation example</a> which uses <a href="https://www.npmjs.com/package/node-input-validator">node-input-validator</a> and checks for CSRF problems.</p>
@@ -258,9 +260,17 @@
 <p>By default the web server will write to log files in the <code>./logs</code> folder. These files are automatically rotated by the server. There are two types of logs:</p>
 <ul>
 <li><code>logs/access.log</code> which are standard web access logs in “combined” format.</li>
-<li><code>logs/error.log</code> where <code>console.log</code> and <code>console.error</code> is written (and duplicated to stdout).</li>
+<li><code>logs/error.log</code> where tracebacks are written using <code>tracebacks/install-traceback-handler</code>.</li>
 </ul>
-<p>Note: the <code>error.log</code> is not written by default, you need to enable it by calling <code>(logging/bind-console-to-file)</code>. This will rebind stdout to “tee” into the logfile <code>./logs/error.log</code> as well as printing to stdout.</p>
+<p>To send uncaught exceptions to the error log:</p>
+<pre><code>(def admin-email (env-required "ADMIN_EMAIL"))
+(def build-id (try (fs/readFileSync "build-id.txt") (catch :default _e "dev")))
+
+(install-traceback-handler admin-email build-id)
+</code></pre>
+<p>Create <code>build-id.txt</code> based on the current git commit as follows:</p>
+<pre><code>git rev-parse HEAD | cut -b -8 &gt; build-id.txt
+</code></pre>
 <h4><a href="#404-and-500-errors" id="404-and-500-errors"></a>404 and 500 errors</h4>
 <p>You can use the <a href="https://chr15m.github.io/sitefox/sitefox.db.html#var-setup-error-handler"><code>web/setup-error-handler</code></a> function to serve a page for those errors based on a Reagent component you define:</p>
 <pre><code class="language-clojure">(defn component-error-page [_req error-code error]
@@ -273,13 +283,12 @@
 
 (web/setup-error-handler app my-html-template "main" component-error-page)
 </code></pre>
-<h4><a href="#tracebacks" id="tracebacks"></a>Tracebacks</h4>
-<p>If an error occurs in a running server in production it can be useful to have the traceback emailed to somebody. You can tell Sitefox to email all tracebacks using <code>install-traceback-emailer</code> from <code>sitefox.tracebacks</code>:</p>
-<pre><code>(install-traceback-emailer (env "ADMIN_EMAIL"))
+<p>You can combine these to catch both 500 Internal Server errors and uncaught exceptions as follow:</p>
+<pre><code>(let [traceback-handler (install-traceback-handler admin-email build-id)]
+    (web/setup-error-handler app template-app "main" component-error-page traceback-handler))
 </code></pre>
-<p>Set the <code>ADMIN_EMAIL</code> environment variable to the email address where you want tracebacks to be sent. You can also specify an email as a string.</p>
 <h3><a href="#live-reloading" id="live-reloading"></a>Live reloading</h3>
 <p>Live reloading is supported using both <code>nbb</code> and <code>shadow-cljs</code>. It is enabled by default when using the npm create scripts. Examples have more details.</p>
 <h2><a href="#who" id="who"></a>Who</h2>
-<p>Sitefox was made by <a href="https://mccormick.cx">Chris McCormick</a> (<a href="https://twitter.com/mccrmx">@mccrmx</a>). I iterated on it while building sites for myself and for clients.</p>
+<p>Sitefox was made by <a href="https://mccormick.cx">Chris McCormick</a> (<a href="https://twitter.com/mccrmx">@mccrmx on Twitter</a> and <a href="https://mccormick.cx/@chris">@chris@mccormick.cx on Mastodon</a>). I iterated on it while building sites for myself and for clients.</p>
 </div></div></div></body></html>
