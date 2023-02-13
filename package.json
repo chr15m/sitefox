@@ -19,7 +19,7 @@
     "nodemailer": "6.6.5",
     "passport": "0.5.2",
     "passport-local": "1.0.0",
-    "rotating-file-stream": "2.1.6",
+    "rotating-file-stream": "3.0.4",
     "sqlite3": "5.0.2",
     "tmp": "^0.2.1"
   },
