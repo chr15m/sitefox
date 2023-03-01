@@ -22,7 +22,7 @@ server: node_modules
 	@rm -f devserver.js; until [ -f devserver.js -a -d .shadow-cljs ]; do sleep 1; done; echo "devserver.js appeared. starting."
 	@sleep 1 && while [ 1 ]; do DEV=1 node devserver.js; sleep 3; echo "restarting devserver.js"; done
 
-watcher:
+watcher: node_modules
 	npx shadow-cljs watch server app
 
 watch:
