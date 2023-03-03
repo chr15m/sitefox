@@ -394,7 +394,7 @@ If you're making an ajax `POST` request from the client side, you should pass th
           #js {:method "POST"
                :headers #js {:Content-Type "application/json"
                              :XSRF-Token (csrf-token)}
-                             :body (js/JSON.stringify (clj->js data))})
+               :body (js/JSON.stringify (clj->js data))})
 ```
 
 ### Logging and errors
