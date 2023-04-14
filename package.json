@@ -20,6 +20,7 @@
     "passport": "0.5.2",
     "passport-local": "1.0.0",
     "rotating-file-stream": "3.0.4",
+    "source-map-support": "^0.5.21",
     "sqlite3": "5.0.2",
     "tmp": "^0.2.1"
   },

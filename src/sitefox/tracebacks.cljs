@@ -3,6 +3,7 @@
   (:require
     ["util" :as util]
     ["rotating-file-stream" :as rfs]
+    ["source-map-support" :as source-map-support]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
     [sitefox.mail :refer [send-email]]
@@ -63,6 +64,7 @@
                          (error-handler-fn error nil)
                          (flush-error-log log)
                          (js/process.exit 1)))]
+        (.install source-map-support)
         (aset js/process "sitefox-traceback-handler" error-handler-fn)
         (.on js/process "unhandledRejection" error-fn)
         (.on js/process "uncaughtException" error-fn)
