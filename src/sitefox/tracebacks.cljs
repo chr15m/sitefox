@@ -25,7 +25,7 @@
           (.end log))
         (res)))))
 
-(defn ^:no-doc handle-traceback [email-address log build-id req error]
+(defn ^:no-doc handle-traceback [email-address log build-id error req]
   (p/let [error-message (str
                           (if req
                             (str "Sitefox traceback at " (build-absolute-uri req (aget req "path")) "\n")

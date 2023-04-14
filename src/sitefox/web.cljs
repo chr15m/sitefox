@@ -197,7 +197,7 @@
           (fn [error req res done]
             (p/catch
               (p/let [_error-handler-result (when error-handler-fn
-                                              (error-handler-fn req error))]
+                                              (error-handler-fn error req))]
                 (if (aget res "headersSent")
                   (done error)
                   (-> res
