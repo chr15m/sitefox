@@ -60,7 +60,7 @@
             error-handler-fn (partial handle-traceback email-address log build-id)
             error-fn (fn [error]
                        (p/do!
-                         (error-handler-fn nil error)
+                         (error-handler-fn error nil)
                          (flush-error-log log)
                          (js/process.exit 1)))]
         (aset js/process "sitefox-traceback-handler" error-handler-fn)
