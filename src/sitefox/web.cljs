@@ -50,6 +50,8 @@
   * Setting up sessions in the configured database.
   * Parse cookies and body."
   [app]
+  ; emit a warning if SECRET is not set
+  (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
   (let [logs (path/join server-dir "/logs")
         access-log (.createStream rfs "access.log" #js {:interval "7d" :path logs})
         kv-session (db/kv "session")
@@ -71,10 +73,11 @@
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
+  (let [pre-csrf-router (.Router. express)]
+    (.use app pre-csrf-router)
+    (j/assoc! app :pre-csrf-router pre-csrf-router))
   (.use app (csrf #js {:cookie #js {:httpOnly true :sameSite "Strict" :secure true}}))
   (.use app (fn [req res done] (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken) #js {:secure true :sameSite "Strict"}) (done)))
-  ; emit a warning if SECRET is not set
-  (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
   app)
 
 (defn static-folder

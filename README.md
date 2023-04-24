@@ -397,6 +397,19 @@ If you're making an ajax `POST` request from the client side, you should pass th
                :body (js/JSON.stringify (clj->js data))})
 ```
 
+In some rare circumstances you may wish to turn off CSRF checking (for example posting to an API from a non-browser device).
+If you know what you are doing you can use the `pre-csrf-router` to add routes which bypass the CSRF checking:
+
+```clojure
+(defn setup-routes [app]
+  ; flush all routes from express
+  (web/reset-routes app)
+  ; set up an API route bypassing CSRF checks
+  (.post (j/get app "pre-csrf-router") "/api/endpoint" endpoint-unprotected-by-csrf)
+  ; set up an express route for "/hello" which is protected as normal
+  (.post app "/hello" hello))
+```
+
 ### Logging and errors
 
 By default the web server will write to log files in the `./logs` folder.
