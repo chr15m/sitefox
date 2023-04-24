@@ -273,6 +273,36 @@ For example to make a query against the configured database:
 
 Again, [promesa](https://github.com/funcool/promesa) is recommended for managing control flow during database operations.
 
+#### Sqlite3 full stack traces
+
+By default the `node-sqlite3` module does not provide full stack traces with line numbers etc. when a database error occurs.
+It's possible to [turn on verbose stack traces](https://github.com/TryGhost/node-sqlite3/wiki/Debugging) with a small performance penalty as follows:
+
+```clojure
+(ns yourapp
+  (:require
+    ["sqlite3" :as sqlite3]))
+
+(.verbose sqlite3)
+```
+
+#### Enabling Sqlite3 WAL mode
+
+If you want to run sqlite3 in production you may run into the error `SQLITE_BUSY: database is locked` when performing simultaneous database operations from different clients.
+It is possible to resolve these concurrency and locking issues by enabling [write-ahead logging mode in sqlite3](https://www.sqlite.org/wal.html) as follows:
+
+```
+(ns yourapp
+  (:require
+    [sitefox.db :refer [client]]))
+
+(p/let [c (client)
+        wal-mode-enabled (.query c "PRAGMA journal_mode=WAL;")]
+  (js/console.log wal-mode-enabled))
+```
+
+This code can safely be placed in the main function of your server code.
+
 ### Sessions
 
 Sessions are enabled by default and each visitor to your server will have their own session.
