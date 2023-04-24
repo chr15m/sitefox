@@ -267,7 +267,7 @@ For example to make a query against the configured database:
 
 ```clojure
 (let [c (db/client)]
-  (-> (.query db "select * from sometable WHERE x = 1")
+  (-> (.query c "select * from sometable WHERE x = 1")
     (.then (fn [rows] (print rows)))))
 ```
 
