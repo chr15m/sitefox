@@ -52,6 +52,8 @@
                     "<html><body><span id=one></span><span id=two></span></body></html>"))
              (is (= (select-apply html-string ["#app" :setHTML [:p "My message."]])
                     "<html><body><div id='app'><p>My message.</p></div><span id=one></span><span id=two></span></body></html>"))
+             (is (= (select-apply html-string ["body" :setHTML "It's <strong>strong</strong>."])
+                    "<html><body>It's <strong>strong</strong>.</body></html>"))
              (is (= (select-apply html-string ["span" :setHTML "In span."] ["#app" :remove])
                     "<html><body><span id=one>In span.</span><span id=two>In span.</span></body></html>"))
              (is (= (select-apply html-string ["span" :setAttribute "data-thing" 42] ["#app" :remove])
@@ -63,7 +65,7 @@
     (doseq [[selector method-name & args] selector-application-pairs]
       (doseq [el ($$ document selector)]
         (if (= (keyword method-name) :setHTML)
-          (j/assoc! el :innerHTML (render (first args)))
+          (j/assoc! el :innerHTML (render-anything (first args)))
           (j/apply el method-name (clj->js args)))))
     (if string-template
       (j/call document :toString)
