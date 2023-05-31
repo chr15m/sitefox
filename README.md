@@ -47,7 +47,7 @@ Battle tested on real sites.
 
  * `PORT` - configure the port Sitefox web server binds to.
  * `BIND_ADDRESS` - configure the IP address Sitefox web server binds to.
- * `SMTP_URL` - configure the outgoing SMTP server e.g. `SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true`.
+ * `SMTP_SERVER` - configure the outgoing SMTP server e.g. `SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true`.
  * `DATABASE_URL` - configure the database to connect to. Defaults to `sqlite://./database.sqlite`.
 
 ## Quick start
