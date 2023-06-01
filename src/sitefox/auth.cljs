@@ -16,7 +16,7 @@
     [promesa.core :as p]
     ["crypto" :refer [createHash createHmac randomBytes pbkdf2Sync scryptSync createCipheriv createDecipheriv]]
     [sitefox.util :refer [env]]
-    [sitefox.html :refer [render-anything direct-to-template]]
+    [sitefox.html :refer [render-anything direct-to-template render-into]]
     [sitefox.db :refer [kv]]
     [sitefox.mail :refer [send-email]]
     [sitefox.web :refer [is-post? build-absolute-uri name-route get-named-route]]))
@@ -603,6 +603,16 @@
        [:button.primary {:type "submit"} "Update password"]]]]))
 
 ; ***** route installing functions ***** ;
+
+(defn make-handle-csrf-error
+  "Make an error handling page for CSRF errors."
+  [template]
+  (fn [err _req res n]
+    (if (= (aget err "code") "EBADCSRFTOKEN")
+      (-> res
+          (.status 403)
+          (.send (render-into template "main" [:div [:h1 "Invalid form"] [:div.warning "The form was tampered with."]])))
+      (n err))))
 
 (defn setup-auth
   "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'."
