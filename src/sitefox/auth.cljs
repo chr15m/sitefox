@@ -156,12 +156,6 @@
   `fields` is a structure following the input validator format like: `{:email [\"required\" \"email\"]}`.
   `warnings` is similarly a structure overriding the default warnings like: `{:email \"You must supply a valid email address\"}`."
   [req fields & [warnings]]
-  fields {:email ["required" "email"]
-          :email2 ["required" "email" "same:email"]
-          :password ["required"]
-          :password2 ["required" "same:password"]}
-  warnings {:email2.same "Email addresses must match."
-            :password2.same "Passwords must match."}
   (p/let [data (j/get req :body)
           validator (Validator. data (clj->js fields) (clj->js (or warnings {})))
           validated (.check validator)
