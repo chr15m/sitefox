@@ -73,7 +73,7 @@
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
-  (let [pre-csrf-router (.Router. express)]
+  (let [pre-csrf-router (express.Router.)]
     (.use app pre-csrf-router)
     (j/assoc! app :pre-csrf-router pre-csrf-router))
   (.use app (csrf #js {:cookie #js {:httpOnly true :sameSite "Strict" :secure true}}))
