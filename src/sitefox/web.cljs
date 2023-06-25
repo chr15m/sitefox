@@ -9,6 +9,7 @@
     ["path" :as path]
     ["rotating-file-stream" :as rfs]
     ["express-session" :refer [Store]]
+    ["express" :refer [Router]]
     [sitefox.deps :refer [express cookies body-parser serve-static session morgan csrf]]
     [sitefox.html :refer [direct-to-template]]))
 
@@ -73,7 +74,7 @@
   ; json body parser
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
-  (let [pre-csrf-router (express.Router.)]
+  (let [pre-csrf-router (Router.)]
     (.use app pre-csrf-router)
     (j/assoc! app :pre-csrf-router pre-csrf-router))
   (.use app (csrf #js {:cookie #js {:httpOnly true :sameSite "Strict" :secure true}}))
