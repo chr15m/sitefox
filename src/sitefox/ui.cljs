@@ -58,8 +58,11 @@
 
 (defn get-cookie
   "Returns the value of the named cookie from js/document.cookies (or optionally the `cookies` argument)."
+  {:test (fn []
+           (is (= (get-cookie "one" "one=two") "two"))
+           (is (= (get-cookie "three" "three=four; five=six") "four")))}
   [cookie-name & [cookies]]
-  (second (re-find (js/RegExp. (str cookie-name "=(.*)")) (or cookies (aget js/document "cookie")))))
+  (second (re-find (js/RegExp. (str cookie-name "=([^;]+)")) (or cookies (aget js/document "cookie")))))
 
 (defn csrf-token
   "Returns the CSRF token passed by Sitefox in the `XSRF-TOKEN` header.
