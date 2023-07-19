@@ -42,7 +42,7 @@
 <ul>
 <li><code>PORT</code> - configure the port Sitefox web server binds to.</li>
 <li><code>BIND_ADDRESS</code> - configure the IP address Sitefox web server binds to.</li>
-<li><code>SMTP_URL</code> - configure the outgoing SMTP server e.g. <code>SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true</code>.</li>
+<li><code>SMTP_SERVER</code> - configure the outgoing SMTP server e.g. <code>SMTP_SERVER=smtps://username:password@mail.someserver.com/?pool=true</code>.</li>
 <li><code>DATABASE_URL</code> - configure the database to connect to. Defaults to <code>sqlite://./database.sqlite</code>.</li>
 </ul>
 <h2><a href="#quick-start" id="quick-start"></a>Quick start</h2>
@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.15" :git/sha "e8c373a828f695398e382e6b27b09ec529e54c90"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.17" :git/sha "ad4f9d657a8dc423134cf0e9699f85525f2f69c3"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -183,10 +183,32 @@
 </code></pre>
 <p>You can use <code>db/client</code> to access the underlying database client. For example to make a query against the configured database:</p>
 <pre><code class="language-clojure">(let [c (db/client)]
-  (-&gt; (.query db "select * from sometable WHERE x = 1")
+  (-&gt; (.query c "select * from sometable WHERE x = 1")
     (.then (fn [rows] (print rows)))))
 </code></pre>
 <p>Again, <a href="https://github.com/funcool/promesa">promesa</a> is recommended for managing control flow during database operations.</p>
+<p>To explore key-value data from the command line use sqlite and jq to filter data like this:</p>
+<pre><code>sqlite3 database.sqlite "select * from keyv where key like 'SOMEPREFIX%';" | cut -f 2 -d "|" | jq '.'
+</code></pre>
+<h4><a href="#sqlite3-full-stack-traces" id="sqlite3-full-stack-traces"></a>Sqlite3 full stack traces</h4>
+<p>By default the <code>node-sqlite3</code> module does not provide full stack traces with line numbers etc. when a database error occurs. It’s possible to <a href="https://github.com/TryGhost/node-sqlite3/wiki/Debugging">turn on verbose stack traces</a> with a small performance penalty as follows:</p>
+<pre><code class="language-clojure">(ns yourapp
+  (:require
+    ["sqlite3" :as sqlite3]))
+
+(.verbose sqlite3)
+</code></pre>
+<h4><a href="#enabling-sqlite3-wal-mode" id="enabling-sqlite3-wal-mode"></a>Enabling Sqlite3 WAL mode</h4>
+<p>If you want to run sqlite3 in production you may run into the error <code>SQLITE_BUSY: database is locked</code> when performing simultaneous database operations from different clients. It is possible to resolve these concurrency and locking issues by enabling <a href="https://www.sqlite.org/wal.html">write-ahead logging mode in sqlite3</a> as follows:</p>
+<pre><code>(ns yourapp
+  (:require
+    [sitefox.db :refer [client]]))
+
+(p/let [c (client)
+        wal-mode-enabled (.query c "PRAGMA journal_mode=WAL;")]
+  (js/console.log wal-mode-enabled))
+</code></pre>
+<p>This code can safely be placed in the main function of your server code.</p>
 <h3><a href="#sessions" id="sessions"></a>Sessions</h3>
 <p>Sessions are enabled by default and each visitor to your server will have their own session. The session data is persisted server side across page loads so you can use it to store authentication status for example. Sessions are backed into a namespaced <code>kv</code> table (see the database section above). You can read and write arbitrary JS data structures to the session using <code>req.session</code>.</p>
 <p>To write a value to the session store (inside a route handler function):</p>
@@ -254,7 +276,16 @@
           #js {:method "POST"
                :headers #js {:Content-Type "application/json"
                              :XSRF-Token (csrf-token)}
-                             :body (js/JSON.stringify (clj-&gt;js data))})
+               :body (js/JSON.stringify (clj-&gt;js data))})
+</code></pre>
+<p>In some rare circumstances you may wish to turn off CSRF checking (for example posting to an API from a non-browser device). If you know what you are doing you can use the <code>pre-csrf-router</code> to add routes which bypass the CSRF checking:</p>
+<pre><code class="language-clojure">(defn setup-routes [app]
+  ; flush all routes from express
+  (web/reset-routes app)
+  ; set up an API route bypassing CSRF checks
+  (.post (j/get app "pre-csrf-router") "/api/endpoint" endpoint-unprotected-by-csrf)
+  ; set up an express route for "/hello" which is protected as normal
+  (.post app "/hello" hello))
 </code></pre>
 <h3><a href="#logging-and-errors" id="logging-and-errors"></a>Logging and errors</h3>
 <p>By default the web server will write to log files in the <code>./logs</code> folder. These files are automatically rotated by the server. There are two types of logs:</p>
