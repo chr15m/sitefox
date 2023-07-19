@@ -273,6 +273,12 @@ For example to make a query against the configured database:
 
 Again, [promesa](https://github.com/funcool/promesa) is recommended for managing control flow during database operations.
 
+To explore key-value data from the command line use sqlite and jq to filter data like this:
+
+```
+sqlite3 database.sqlite "select * from keyv where key like 'SOMEPREFIX%';" | cut -f 2 -d "|" | jq '.'
+```
+
 #### Sqlite3 full stack traces
 
 By default the `node-sqlite3` module does not provide full stack traces with line numbers etc. when a database error occurs.
