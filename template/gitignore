@@ -1,9 +1,0 @@
-build
-database.sqlite
-public/js
-.shadow-cljs
-.clj-kondo/.cache
-node_modules
-logs
-database.sqlite
-devserver.js
