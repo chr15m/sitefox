@@ -12,6 +12,7 @@ if (name) {
   console.log("Creating", name);
   fs.copySync(__dirname + "/template", name);
   fs.moveSync(name + "/src/NAME", name + "/src/" + dir);
+  fs.moveSync(name + "/gitignore", name + "/.gitignore");
   replace.sync({
     "files": [
       args[0] + "/**/**",
