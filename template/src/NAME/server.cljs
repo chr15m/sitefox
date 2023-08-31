@@ -1,10 +1,21 @@
 (ns NAME.server 
   (:require
-    ["fs" :as fs]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
+    ["fs" :as fs]
+    ["source-map-support" :as sourcemaps]
     [sitefox.html :refer [render-into]]
-    [sitefox.web :as web]))
+    [sitefox.web :as web]
+    [sitefox.util :refer [env]]
+    [sitefox.logging :refer [bind-console-to-file]]
+    [sitefox.tracebacks :refer [install-traceback-handler]]))
+
+(bind-console-to-file)
+(sourcemaps/install)
+(let [admin-email (env "ADMIN_EMAIL")
+      build-id (try (fs/readFileSync "build-id.txt") (catch :default _e "dev"))]
+  (when admin-email
+    (install-traceback-handler admin-email build-id)))
 
 (defonce server (atom nil))
 

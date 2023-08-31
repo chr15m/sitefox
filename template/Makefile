@@ -4,6 +4,7 @@ all: build build/server.js
 
 build/server.js: src/**/*.cljs shadow-cljs.edn node_modules
 	npx shadow-cljs release server --debug
+	git rev-parse HEAD | cut -b -8 > build/build-id.txt
 
 build: src/**/* $(STATIC)
 	mkdir -p build/public
