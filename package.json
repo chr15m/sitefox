@@ -1,6 +1,6 @@
 {
   "name": "sitefox",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Backend web framework for Node + ClojureScript",
   "author": "Chris McCormick <chis@mccormick.cx>",
   "homepage": "https://github.com/chr15m/sitefox",
