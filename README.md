@@ -469,6 +469,12 @@ Create `build-id.txt` based on the current git commit as follows:
 git rev-parse HEAD | cut -b -8 > build-id.txt
 ```
 
+If you want to get correct ClojureScript line numbers in tracebacks require `["source-maps-support" :as sourcemaps]` and then:
+
+```
+(.install sourcemaps)
+```
+
 #### 404 and 500 errors
 
 You can use the [`web/setup-error-handler`](https://chr15m.github.io/sitefox/sitefox.db.html#var-setup-error-handler)
