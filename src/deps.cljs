@@ -8,7 +8,7 @@
   "cookie-parser" "1.4.5",
   "source-map-support" "^0.5.21",
   "morgan" "1.10.0",
-  "passport" "0.5.2",
+  "passport" "0.6.0",
   "node-input-validator" "4.5.0",
   "express" "4.17.1",
   "csurf" "1.11.0",

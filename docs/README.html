@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.17" :git/sha "ad4f9d657a8dc423134cf0e9699f85525f2f69c3"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.18" :git/sha "7f658c0c00a752536e5f68a41285014b0d1e8150"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -301,6 +301,9 @@
 </code></pre>
 <p>Create <code>build-id.txt</code> based on the current git commit as follows:</p>
 <pre><code>git rev-parse HEAD | cut -b -8 &gt; build-id.txt
+</code></pre>
+<p>If you want to get correct ClojureScript line numbers in tracebacks require <code>["source-maps-support" :as sourcemaps]</code> and then:</p>
+<pre><code>(.install sourcemaps)
 </code></pre>
 <h4><a href="#404-and-500-errors" id="404-and-500-errors"></a>404 and 500 errors</h4>
 <p>You can use the <a href="https://chr15m.github.io/sitefox/sitefox.db.html#var-setup-error-handler"><code>web/setup-error-handler</code></a> function to serve a page for those errors based on a Reagent component you define:</p>
