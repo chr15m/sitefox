@@ -245,7 +245,7 @@
                         err (done err)
                         (not user) (do (j/assoc-in! req [:auth :messages] #js [(j/assoc! info :class :error)])
                                        (done))
-                        :else (j/call req :logIn user done))))
+                        :else (j/call req :login user #js {:keepSessionInfo true} done))))
      req res done)
     (done)))
 
@@ -327,7 +327,7 @@
                                          :password hashed-password
                                          :salt salt}})
               user (get-or-create-user-by-key :email email user-data)]
-        (j/call req :logIn user done))
+        (j/call req :login user #js {:keepSessionInfo true} done))
       (done))))
 
 ; reset password middleware ;
@@ -417,7 +417,7 @@
                                                     :password hashed-password
                                                     :salt salt}))
                 user (save-user user)]
-          (j/call req :logIn user done))
+          (j/call req :login user #js {:keepSessionInfo true} done))
         (do
           (add-messages! req {:message "No user with this email address exists. Please sign up instead."
                               :class :error}) 
@@ -612,9 +612,15 @@
   "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'."
   [app & [sign-out-redirect-url]]
   (j/call app :use (.authenticate passport "session"))
-  (j/call app :get (name-route app "/auth/sign-out" "auth:sign-out") (fn [req res]
-                                      (j/call req :logout)
-                                      (.redirect res (build-absolute-uri req (or sign-out-redirect-url "/")))))
+  ; TODO: It is a good idea to use POST or DELETE requests instead of GET requests
+  ; for the logout endpoints, in order to prevent accidental or malicious logouts.
+  (j/call app :get (name-route app "/auth/sign-out" "auth:sign-out")
+          (fn [req res done]
+            (j/call req :logout #js {:keepSessionInfo true}
+                    (fn [err]
+                      (if err
+                        (done err)
+                        (.redirect res (build-absolute-uri req (or sign-out-redirect-url "/"))))))))
   (when (not (j/get passport :_sitefox_setup_auth))
     (.serializeUser passport serialize-user)
     (.deserializeUser passport deserialize-user)
