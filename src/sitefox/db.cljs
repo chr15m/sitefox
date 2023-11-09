@@ -98,3 +98,19 @@
                       (done)))))}
   [kv-ns filter-function & [pre db]]
   (ls kv-ns pre db filter-function))
+
+(defn ensure-local-postgres-db-exists
+  "If DATABASE_URL is for a postgres url then create it if it does not already exist.
+  An example of an on-disk db URL: 'postgres://%2Fvar%2Frun%2Fpostgresql/DBNAME'."
+  [& [db-url]]
+  (let [db-url (or db-url database-url)]
+    (when (.startsWith (js/decodeURIComponent db-url) "postgres:///")
+      (let [execSync (aget (js/require "child_process") "execSync")
+            db-name (-> db-url (.split "/") last)
+            cmd (str "psql '" db-name "' -c ';' 2>/dev/null && echo 'Database " db-name " exists.' || createdb '" db-name "'")]
+        (execSync cmd #js {:shell true :stdio "inherit"})
+        ; connect once to initiate table creation
+        (p/let [db (Keyv. db-url)
+                query (aget db "opts" "store" "query")
+                version-query (query "SELECT version();")]
+          version-query)))))
