@@ -8,7 +8,7 @@
     "@keyv/sqlite": "3.6.5",
     "cookie-parser": "1.4.5",
     "csurf": "1.11.0",
-    "express": "4.17.1",
+    "express": "4.18.2",
     "express-session": "1.17.2",
     "html-to-text": "8.1.0",
     "json-stringify-safe": "5.0.1",
@@ -19,15 +19,15 @@
     "nodemailer": "6.6.5",
     "passport": "0.6.0",
     "passport-local": "1.0.0",
+    "react": "18.1.0",
+    "react-dom": "18.1.0",
     "rotating-file-stream": "3.0.4",
-    "source-map-support": "^0.5.21",
-    "tmp": "^0.2.1"
+    "source-map-support": "0.5.21",
+    "tmp": "0.2.1"
   },
   "devDependencies": {
-    "nbb": "0.0.107",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "shadow-cljs": "^2.19.0"
+    "nbb": "^1.2.179",
+    "shadow-cljs": "2.19.0"
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.cljs",
