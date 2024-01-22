@@ -14,8 +14,11 @@
   (.get app "/" root-view))
 
 (defonce init
-  (p/let [self *file*
-          [app host port] (web/start)]
-    (setup-routes app)
-    (nbb-reloader self #(setup-routes app))
-    (println "Serving on" (str "http://" host ":" port))))
+  (p/catch
+    (p/let [self *file*
+            [app host port] (web/start)]
+      (print "here")
+      (setup-routes app)
+      (nbb-reloader self #(setup-routes app))
+      (println "Serving on" (str "http://" host ":" port)))
+    (fn [err] (js/console.error err))))
