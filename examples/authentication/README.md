@@ -4,7 +4,7 @@ To run this example:
 
 1. Clone this repo.
 2. Go into `examples/authentication`.
-3. `npm i`
+3. `npm i --no-save`
 4. `npm run serve`
 
 This will compile `src/shadowtest/server.cljs` to `server.js` and then run it. You can connect at http://localhost:8000/.
