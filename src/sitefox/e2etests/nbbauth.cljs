@@ -1,7 +1,7 @@
 (ns sitefox.e2etests.nbbauth
   (:require
-    ;[clojure.test :as t :refer [deftest is async]]
-    #_ [clojure.string :as str]
+    [clojure.test :as t :refer [deftest is async]]
+    [clojure.string :refer [includes?]]
     [applied-science.js-interop :as j]
     [promesa.core :as p]
     ["child_process" :refer [spawn spawnSync]]
@@ -19,9 +19,9 @@
 (defn run-server [path server-command port]
   ; first run npm init in the folder
   (log "Installing server deps.")
-  (spawnSync "npm i" #js {:cwd path
-                          :stdio "inherit"
-                          :shell true})
+  (spawnSync "npm i --no-save" #js {:cwd path
+                                    :stdio "inherit"
+                                    :shell true})
   ; now run the server
   (log "Spawning server.")
   (p/let [server (spawn server-command #js {:cwd path
@@ -32,15 +32,14 @@
           pid (j/get server :pid)]
     (log "Port found, server running with PID" pid)
     (j/assoc! port-info :process server
-          :kill (fn [] (kill pid)))))
+              :kill (fn [] (kill pid)))))
 
-(p/let [server (run-server "examples/nbb" "npm i; npm run serve" 8000)]
+#_ (p/let [server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)]
   (p/delay 3000)
   (print "Waited 3 seconds, aborting")
   ;(j/call-in server [:process :kill] "SIGINT")
   ;(j/call-in server [:controller :abort])
-  (j/call server :kill)
-  )
+  (j/call server :kill))
 
 #_ (t/use-fixtures
   :once
@@ -57,7 +56,7 @@
           (print "Using existing server - make sure you're running the test db.\n"
                  "DATABASE_URL=sqlite://./tests.sqlite make watch"))
         ; reset the test db
-        #_  (when (str/includes? (aget js/process.env "DATABASE_URL") "/tests.sqlite")
+        #_  (when (includes? (aget js/process.env "DATABASE_URL") "/tests.sqlite")
           (print "Deleting the test database.")
           (.query db "delete from keyv;"))
         (reset! rig {:page page :browser browser
@@ -83,4 +82,18 @@
              (p/delay 10000)
              (done)))))
 
-#_ (t/run-tests 'sitefox.e2etests.nbbauth)
+(deftest basic-site-test
+  (t/testing "Basic test of Sitefox on nbb."
+    (async done
+           (p/let [server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)
+                   res (js/fetch "http://localhost:8000/")
+                   text (.text res)]
+             (is (j/get-in server [:process :pid]) "Server is running?")
+             (is (j/get server :open) "Server port is open?")
+             (is (j/get res :ok) "Was server response ok?")
+             (is (includes? text "Hello") "Server response includes 'Hello' text?")
+             (log "Test done. Killing server.")
+             (j/call server :kill)
+             (done)))))
+
+(t/run-tests *ns*)
