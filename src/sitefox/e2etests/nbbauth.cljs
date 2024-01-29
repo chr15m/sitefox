@@ -6,13 +6,13 @@
     [promesa.core :as p]
     ["child_process" :refer [spawn spawnSync]]
     ["tree-kill$default" :as kill]
-    ;["playwright$default" :as pw]
+    ["playwright$default" :as pw]
     ["wait-port$default" :as wait-for-port]
     #_ [sitefox.db :refer [client]]))
 
 ;(def browser-type pw/chromium)
 
-(def rig (atom {}))
+(def base-url "http://localhost:8000/")
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
 
@@ -31,69 +31,80 @@
           port-info (wait-for-port #js {:host "127.0.0.1" :port port})
           pid (j/get server :pid)]
     (log "Port found, server running with PID" pid)
-    (j/assoc! port-info :process server
-              :kill (fn [] (kill pid)))))
+    (j/assoc! port-info
+              :process server
+              :kill (p/promisify #(kill pid "SIGTERM" %)))))
 
-#_ (p/let [server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)]
-  (p/delay 3000)
-  (print "Waited 3 seconds, aborting")
-  ;(j/call-in server [:process :kill] "SIGINT")
-  ;(j/call-in server [:controller :abort])
-  (j/call server :kill))
+(defn get-browser []
+  (p/let [browser (.launch pw/chromium #js {:headless false :timeout 3000})
+          context (.newContext browser)
+          page (.newPage context)]
+    (.setDefaultTimeout page 3000)
+    {:browser browser :context context :page page}))
 
-#_ (t/use-fixtures
-  :once
-  {:before
-   #(async
-      done
-      (p/let [;db (client)
-              ;[cwd server] (if (not use-dev-server) (run-server) ["." nil])
-              port 8000
-              browser (.launch pw/chromium #js {:headless false})
-              context (.newContext browser)
-              page (.newPage context)]
-        #_ (when (not server)
-          (print "Using existing server - make sure you're running the test db.\n"
-                 "DATABASE_URL=sqlite://./tests.sqlite make watch"))
-        ; reset the test db
-        #_  (when (includes? (aget js/process.env "DATABASE_URL") "/tests.sqlite")
-          (print "Deleting the test database.")
-          (.query db "delete from keyv;"))
-        (reset! rig {:page page :browser browser
-                     ;:server server :cwd cwd
-                     :base-url (str "http://localhost:" port)})
-        (wait-for-port #js {:host "localhost" :port port})
-        (done)))
-   :after
-   #(async
-      done
-      (p/let [{:keys [browser server]} @rig]
-        (.close browser)
-        (when server
-          (.kill server))
-        (done)))})
-
-#_ (deftest nbbauth
-  (t/testing "Auth against Sitefox on nbb tests."
-    (async done
-           (p/let [{:keys [page base-url]} @rig]
-             (.goto page base-url)
-             (is true)
-             (p/delay 10000)
-             (done)))))
+(defn catch-fail [err done server & [browser]]
+  (is (nil? err) (str "Error in test: " (.toString err)))
+  (j/call server :kill)
+  (when browser
+    (.close browser))
+  (done))
 
 (deftest basic-site-test
   (t/testing "Basic test of Sitefox on nbb."
     (async done
-           (p/let [server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)
+           (p/let [_ (log "Test: basic-site-test")
+                   server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)
                    res (js/fetch "http://localhost:8000/")
                    text (.text res)]
-             (is (j/get-in server [:process :pid]) "Server is running?")
-             (is (j/get server :open) "Server port is open?")
-             (is (j/get res :ok) "Was server response ok?")
-             (is (includes? text "Hello") "Server response includes 'Hello' text?")
-             (log "Test done. Killing server.")
-             (j/call server :kill)
-             (done)))))
+             (p/catch
+               (p/do!
+                 (is (j/get-in server [:process :pid]) "Server is running?")
+                 (is (j/get server :open) "Server port is open?")
+                 (is (j/get res :ok) "Was server response ok?")
+                 (is (includes? text "Hello") "Server response includes 'Hello' text?")
+                 (log "Test done. Killing server.")
+                 (j/call server :kill)
+                 (log "After server.")
+                 (done))
+               #(catch-fail % done server))))))
+
+(deftest nbb-auth
+  (t/testing "Auth against Sitefox on nbb tests."
+    (async done
+           (p/let [_ (log "Test: nbb-auth")
+                   server (run-server "examples/nbb-auth" "npm i --no-save; npm run serve" 8000)
+                   {:keys [page browser]} (get-browser)]
+             (p/catch
+               (p/do!
+                 (.goto page base-url)
+                 ; click "Sign in"
+                 (-> page (.locator "a[href='/auth/sign-in']") .click)
+                 ; click "Sign up"
+                 (-> page (.locator "a[href='/auth/sign-up']") .click)
+                 ; fill out details and sign up
+                 (-> page (.locator "input[name='email']") (.fill "goober@example.com"))
+                 (-> page (.locator "input[name='email2']") (.fill "goober@example.com"))
+                 (-> page (.locator "input[name='password']") (.fill "tester"))
+                 (-> page (.locator "input[name='password2']") (.fill "tester"))
+
+                 (-> page (.locator "button:has-text('Sign up')") .click)
+
+                 (-> page (.waitForSelector ":has-text('Verification sent')"))
+                 (p/let [content (.content page)]
+                   (is (includes? content "Verification sent")
+                       "Check that the verification was sent."))
+
+                 (log "Closing resources.")
+                 (j/call server :kill)
+                 (.close browser)
+                 (log "Resources closed.")
+                 (done))
+               #(catch-fail % done server browser))))))
+
+#_ (defmethod cljs.test/report [:cljs.test/default :end-run-tests] [m]
+     (print "report")
+     (if (cljs.test/successful? m)
+       (println "Success!")
+       (println "FAIL")))
 
 (t/run-tests *ns*)
