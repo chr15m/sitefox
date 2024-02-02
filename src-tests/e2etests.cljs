@@ -1,4 +1,4 @@
-(ns sitefox.e2etests.nbbauth
+(ns e2etests
   (:require
     [clojure.test :as t :refer [deftest is async]]
     [clojure.string :refer [includes?]]
@@ -113,7 +113,7 @@
                    (.goto page url)
                    (check-for-text page "Signed in" "User is correctly signed in after verification.")
                    (.goto page base-url)
-                   (check-for-text page "Signed inz" "User is correctly signed in on homepage."))
+                   (check-for-text page "Signed in" "User is correctly signed in on homepage."))
 
                  (log "Closing resources.")
                  (j/call server :kill)
