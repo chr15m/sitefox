@@ -5,6 +5,7 @@
     [applied-science.js-interop :as j]
     [promesa.core :as p]
     ["child_process" :refer [spawn spawnSync]]
+    ["process" :refer [env]]
     ["tree-kill$default" :as kill]
     ["playwright$default" :as pw]
     ["wait-port$default" :as wait-for-port]
@@ -50,7 +51,7 @@
       (swap! log-listeners conj [re-string res]))))
 
 (defn get-browser []
-  (p/let [browser (.launch pw/chromium #js {:headless false :timeout 3000})
+  (p/let [browser (.launch pw/chromium #js {:headless (nil? (j/get env "CI")) :timeout 3000})
           context (.newContext browser)
           page (.newPage context)]
     (.setDefaultTimeout page 3000)
