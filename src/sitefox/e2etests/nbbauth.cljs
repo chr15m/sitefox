@@ -12,9 +12,10 @@
 
 ;(def browser-type pw/chromium)
 
-(def base-url "http://localhost:8000/")
+(def base-url "http://localhost:8000")
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
+(def log-listeners (atom #{}))
 
 (defn run-server [path server-command port]
   ; first run npm init in the folder
@@ -25,15 +26,28 @@
   ; now run the server
   (log "Spawning server.")
   (p/let [server (spawn server-command #js {:cwd path
-                                            :stdio "inherit"
+                                            ;:stdio "inherit"
                                             :shell true
                                             :detach true})
           port-info (wait-for-port #js {:host "127.0.0.1" :port port})
           pid (j/get server :pid)]
+    (j/call-in server [:stdout :on] "data"
+               (fn [data]
+                 (doseq [[re-string listener-fn] @log-listeners]
+                   (let [matches (.match (.toString data) (js/RegExp. re-string "s"))]
+                     (when matches
+                       (listener-fn matches)
+                       (swap! log-listeners disj [re-string listener-fn]))))
+                 #_ (log "Server:" (.toString data))))
     (log "Port found, server running with PID" pid)
     (j/assoc! port-info
               :process server
               :kill (p/promisify #(kill pid "SIGTERM" %)))))
+
+(defn listen-to-log [re-string]
+  (js/Promise.
+    (fn [res]
+      (swap! log-listeners conj [re-string res]))))
 
 (defn get-browser []
   (p/let [browser (.launch pw/chromium #js {:headless false :timeout 3000})
@@ -68,6 +82,11 @@
                  (done))
                #(catch-fail % done server))))))
 
+(defn check-for-text [page text message]
+  (p/let [_ (-> page (.waitForSelector (str ":has-text('" text "')")))
+          content (.content page)]
+    (is (includes? content text) message)))
+
 (deftest nbb-auth
   (t/testing "Auth against Sitefox on nbb tests."
     (async done
@@ -87,12 +106,14 @@
                  (-> page (.locator "input[name='password']") (.fill "tester"))
                  (-> page (.locator "input[name='password2']") (.fill "tester"))
 
-                 (-> page (.locator "button:has-text('Sign up')") .click)
-
-                 (-> page (.waitForSelector ":has-text('Verification sent')"))
-                 (p/let [content (.content page)]
-                   (is (includes? content "Verification sent")
-                       "Check that the verification was sent."))
+                 (p/let [[log-items] (p/all [(listen-to-log "verify-url (?<url>http.*?)[\n$]")
+                                             (-> page (.locator "button:has-text('Sign up')") .click)])
+                         url (j/get-in log-items [:groups :url])]
+                   ; click on the verification link
+                   (.goto page url)
+                   (check-for-text page "Signed in" "User is correctly signed in after verification.")
+                   (.goto page base-url)
+                   (check-for-text page "Signed inz" "User is correctly signed in on homepage."))
 
                  (log "Closing resources.")
                  (j/call server :kill)
