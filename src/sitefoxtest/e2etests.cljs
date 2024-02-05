@@ -1,4 +1,4 @@
-(ns e2etests
+(ns sitefoxtest.e2etests
   (:require
     [clojure.test :as t :refer [deftest is async]]
     [clojure.string :refer [includes?]]
