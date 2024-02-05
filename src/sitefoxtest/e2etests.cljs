@@ -13,10 +13,13 @@
 
 ;(def browser-type pw/chromium)
 
-(def base-url "http://127.0.0.1:8000")
+(def host "localhost")
+(def base-url (str "http://" host ":8000"))
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
 (def log-listeners (atom #{}))
+
+(j/assoc! env "BIND_ADDRESS" host)
 
 (defn run-server [path server-command port]
   ; first run npm init in the folder
@@ -30,7 +33,7 @@
                                             ;:stdio "inherit"
                                             :shell true
                                             :detach true})
-          port-info (wait-for-port #js {:host "127.0.0.1" :port port})
+          port-info (wait-for-port #js {:host host :port port})
           pid (j/get server :pid)]
     (j/call-in server [:stdout :on] "data"
                (fn [data]
