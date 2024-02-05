@@ -58,5 +58,5 @@ jobs:
     - name: Run the tests
       run: npm run test
 
-    #- name: Run the e2e tests
-    #  run: npm run test-e2e
+    - name: Run the e2e tests
+      run: npm run test-e2e
