@@ -70,11 +70,10 @@
   (t/testing "Basic test of Sitefox on nbb."
     (async done
            (p/let [_ (log "Test: basic-site-test")
-                   server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)
-                   res (js/fetch base-url)
-                   text (.text res)]
+                   server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)]
              (p/catch
-               (p/do!
+               (p/let [res (js/fetch base-url)
+                       text (.text res)]
                  (is (j/get-in server [:process :pid]) "Server is running?")
                  (is (j/get server :open) "Server port is open?")
                  (is (j/get res :ok) "Was server response ok?")
