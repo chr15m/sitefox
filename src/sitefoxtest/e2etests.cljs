@@ -13,7 +13,7 @@
 
 ;(def browser-type pw/chromium)
 
-(def base-url "http://localhost:8000")
+(def base-url "http://127.0.0.1:8000")
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
 (def log-listeners (atom #{}))
@@ -71,7 +71,7 @@
     (async done
            (p/let [_ (log "Test: basic-site-test")
                    server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)
-                   res (js/fetch "http://localhost:8000/")
+                   res (js/fetch base-url)
                    text (.text res)]
              (p/catch
                (p/do!
