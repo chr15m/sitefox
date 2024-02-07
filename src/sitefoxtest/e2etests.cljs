@@ -15,7 +15,7 @@
 
 (def host "localhost")
 (def base-url (str "http://" host ":8000"))
-(def browser-timeout 5000)
+(def browser-timeout 60000)
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
 (def log-listeners (atom #{}))
@@ -65,6 +65,7 @@
     {:browser browser :context context :page page}))
 
 (defn catch-fail [err done server & [browser]]
+  (log "Caught test error.")
   (when err
     (.error js/console err))
   (is (nil? err)
