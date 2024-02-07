@@ -15,6 +15,7 @@
 
 (def host "localhost")
 (def base-url (str "http://" host ":8000"))
+(def browser-timeout 5000)
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
 (def log-listeners (atom #{}))
@@ -57,7 +58,7 @@
 (defn get-browser []
   (p/let [browser (.launch pw/chromium
                            #js {:headless (not (nil? (j/get env "CI")))
-                                :timeout 3000})
+                                :timeout browser-timeout})
           context (.newContext browser)
           page (.newPage context)]
     (.setDefaultTimeout page 3000)
