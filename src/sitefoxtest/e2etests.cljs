@@ -63,7 +63,10 @@
     {:browser browser :context context :page page}))
 
 (defn catch-fail [err done server & [browser]]
-  (is (nil? err) (str "Error in test: " (.toString err)))
+  (when err
+    (.error js/console (j/get err :stack)))
+  (is (nil? err)
+      (str "Error in test: " (.toString err)))
   (j/call server :kill)
   (when browser
     (.close browser))
