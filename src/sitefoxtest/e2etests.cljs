@@ -13,7 +13,7 @@
 
 ;(def browser-type pw/chromium)
 
-(def host "127.0.0.1")
+(def host "localhost")
 (def base-url (str "http://" host ":8000"))
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
@@ -35,6 +35,7 @@
                                             :detach true})
           port-info (wait-for-port #js {:host host :port port})
           pid (j/get server :pid)]
+    (log "Setting up stdout listener.")
     (j/call-in server [:stdout :on] "data"
                (fn [data]
                  (doseq [[re-string listener-fn] @log-listeners]
@@ -64,10 +65,11 @@
 
 (defn catch-fail [err done server & [browser]]
   (when err
-    (.error js/console (j/get err :stack)))
+    (.error js/console err))
   (is (nil? err)
       (str "Error in test: " (.toString err)))
-  (j/call server :kill)
+  (when (and server (j/get server :kill))
+    (j/call server :kill))
   (when browser
     (.close browser))
   (done))
@@ -80,6 +82,7 @@
              (p/catch
                (p/let [res (js/fetch base-url)
                        text (.text res)]
+                 (log "Starting test checks.")
                  (is (j/get-in server [:process :pid]) "Server is running?")
                  (is (j/get server :open) "Server port is open?")
                  (is (j/get res :ok) "Was server response ok?")
