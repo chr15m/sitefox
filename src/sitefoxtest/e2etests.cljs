@@ -13,7 +13,7 @@
 
 ;(def browser-type pw/chromium)
 
-(def host "localhost")
+(def host "127.0.0.1")
 (def base-url (str "http://" host ":8000"))
 
 (def log (j/call-in js/console [:log :bind] js/console " ---> "))
