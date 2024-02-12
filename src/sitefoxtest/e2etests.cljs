@@ -23,11 +23,6 @@
 (j/assoc! env "BIND_ADDRESS" host)
 
 (defn run-server [path server-command port]
-  ; first run npm init in the folder
-  (log "Installing server deps.")
-  (spawnSync "npm i --no-save" #js {:cwd path
-                                    :stdio "inherit"
-                                    :shell true})
   ; delete any old database hanging around
   (spawnSync "rm -f database.sqlite"
              #js {:cwd path
