@@ -249,6 +249,20 @@
                  (done))
                #(catch-fail % done server browser))))))
 
+(defn check-form-submit [page]
+  (p/do!
+    ; fill out bad form details
+    (-> page (.locator "input[name='name']")
+        (.fill "Bilbo"))
+    (-> page (.locator "input[name='date']")
+        (.fill "2023-06-01"))
+    (-> page (.locator "input[name='count']")
+        (.fill "7"))
+    (-> page (.locator "button[type='submit']") .click)
+    (check-for-text
+      page "Form complete."
+      "Form submits sucessfully.")))
+
 (deftest nbb-forms
   (t/testing "Sitefox forms and CSRF on nbb tests."
     (async done
@@ -256,7 +270,7 @@
                    server (run-server "examples/form-validation"
                                       "npm i --no-save; npm run serve"
                                       8000)
-                   {:keys [page browser]} (get-browser)]
+                   {:keys [page context browser]} (get-browser)]
              (p/catch
                (p/do!
                  (.goto page base-url)
@@ -287,19 +301,7 @@
 
                  (.goto page base-url)
 
-                 ; fill out bad form details
-                 (-> page (.locator "input[name='name']")
-                     (.fill "Bilbo"))
-                 (-> page (.locator "input[name='date']")
-                     (.fill "2023-06-01"))
-                 (-> page (.locator "input[name='count']")
-                     (.fill "7"))
-
-                 (-> page (.locator "button[type='submit']") .click)
-
-                 (check-for-text
-                   page "Form complete."
-                   "Form submits sucessfully.")
+                 (check-form-submit page)
 
                  ; fill out form correctly but fail csrf
                  (.goto page base-url)
@@ -320,6 +322,16 @@
                  (check-for-text
                    page "The form was tampered with."
                    "CSRF error caught sucessfully.")
+
+                 ; sanity check by running multiple CSRF checks in parallel forms
+
+                 ; open another form to get a new csrf token
+                 (p/let [page2 (.newPage context)]
+                   (.goto page2 base-url)
+                   ; then reload the first page to get a new token
+                   (.goto page (str base-url "?hello=1"))
+                   ; check the second tab can still successfully submit
+                   (check-form-submit page2))
 
                  (log "Closing resources.")
                  (j/call server :kill)
