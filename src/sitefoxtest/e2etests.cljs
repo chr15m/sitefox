@@ -40,7 +40,8 @@
     (j/call-in server [:stdout :on] "data"
                (fn [data]
                  (doseq [[re-string listener-fn] @log-listeners]
-                   (let [matches (.match (.toString data) (js/RegExp. re-string "s"))]
+                   (let [matches (.match (.toString data)
+                                         (js/RegExp. re-string "s"))]
                      (when matches
                        (listener-fn matches)
                        (swap! log-listeners disj [re-string listener-fn]))))
@@ -80,15 +81,21 @@
   (t/testing "Basic test of Sitefox on nbb."
     (async done
            (p/let [_ (log "Test: basic-site-test")
-                   server (run-server "examples/nbb" "npm i --no-save; npm run serve" 8000)]
+                   server (run-server "examples/nbb"
+                                      "npm i --no-save; npm run serve"
+                                      8000)]
              (p/catch
                (p/let [res (js/fetch base-url)
                        text (.text res)]
                  (log "Starting test checks.")
-                 (is (j/get-in server [:process :pid]) "Server is running?")
-                 (is (j/get server :open) "Server port is open?")
-                 (is (j/get res :ok) "Was server response ok?")
-                 (is (includes? text "Hello") "Server response includes 'Hello' text?")
+                 (is (j/get-in server [:process :pid])
+                     "Server is running?")
+                 (is (j/get server :open)
+                     "Server port is open?")
+                 (is (j/get res :ok)
+                     "Was server response ok?")
+                 (is (includes? text "Hello")
+                     "Server response includes 'Hello' text?")
                  (log "Test done. Killing server.")
                  (j/call server :kill)
                  (log "After server.")
@@ -109,7 +116,9 @@
   (t/testing "Auth against Sitefox on nbb tests."
     (async done
            (p/let [_ (log "Test: nbb-auth")
-                   server (run-server "examples/nbb-auth" "npm i --no-save; npm run serve" 8000)
+                   server (run-server "examples/nbb-auth"
+                                      "npm i --no-save; npm run serve"
+                                      8000)
                    {:keys [page browser]} (get-browser)]
              (p/catch
                (p/do!
@@ -119,19 +128,31 @@
                  ; click "Sign up"
                  (-> page (.locator "a[href='/auth/sign-up']") .click)
                  ; fill out details and sign up
-                 (-> page (.locator "input[name='email']") (.fill "goober@example.com"))
-                 (-> page (.locator "input[name='email2']") (.fill "goober@example.com"))
-                 (-> page (.locator "input[name='password']") (.fill "tester"))
-                 (-> page (.locator "input[name='password2']") (.fill "tester"))
+                 (-> page (.locator "input[name='email']")
+                     (.fill "goober@example.com"))
+                 (-> page (.locator "input[name='email2']")
+                     (.fill "goober@example.com"))
+                 (-> page (.locator "input[name='password']")
+                     (.fill "tester"))
+                 (-> page (.locator "input[name='password2']")
+                     (.fill "tester"))
 
-                 (p/let [[log-items] (p/all [(listen-to-log "verify-url (?<url>http.*?)[\n$]")
-                                             (-> page (.locator "button:has-text('Sign up')") .click)])
+                 (p/let [[log-items]
+                         (p/all [(listen-to-log
+                                   "verify-url (?<url>http.*?)[\n$]")
+                                 (-> page
+                                     (.locator "button:has-text('Sign up')")
+                                     .click)])
                          url (j/get-in log-items [:groups :url])]
                    ; click on the verification link
                    (.goto page url)
-                   (check-for-text page "Signed in" "User is correctly signed in after verification.")
+                   (check-for-text
+                     page "Signed in"
+                     "User is correctly signed in after verification.")
                    (.goto page base-url)
-                   (check-for-text page "Signed in" "User is correctly signed in on homepage."))
+                   (check-for-text
+                     page "Signed in"
+                     "User is correctly signed in on homepage."))
 
                  ; click "Sign out"
                  (-> page (.locator "a[href='/auth/sign-out']") .click)
