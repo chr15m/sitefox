@@ -254,10 +254,45 @@
                  (done))
                #(catch-fail % done server browser))))))
 
-#_ (defmethod cljs.test/report [:cljs.test/default :end-run-tests] [m]
-     (print "report")
-     (if (cljs.test/successful? m)
-       (println "Success!")
-       (println "FAIL")))
+(deftest nbb-forms
+  (t/testing "Sitefox forms and CSRF on nbb tests."
+    (async done
+           (p/let [_ (log "Test: nbb-forms")
+                   server (run-server "examples/form-validation"
+                                      "npm i --no-save; npm run serve"
+                                      8000)
+                   {:keys [page browser]} (get-browser)]
+             (p/catch
+               (p/do!
+                 (.goto page base-url)
+
+                 ; fill out bad form details
+                 (-> page (.locator "input[name='name']")
+                     (.fill ""))
+                 (-> page (.locator "input[name='date']")
+                     (.fill "SEPTEMBER THE NOTHING"))
+                 (-> page (.locator "input[name='count']")
+                     (.fill "XYZ"))
+
+                 (-> page (.locator "button[type='submit']") .click)
+
+                 (check-for-text
+                   page "You must enter a name between 5 and 20 characters."
+                   "Name validation failed successfully.")
+
+                 (check-for-text
+                   page "You must enter a valid date in YYYY-MM-DD format."
+                   "Date validation failed successfully.")
+
+                 (check-for-text
+                   page "You must enter a quantity between 5 and 10."
+                   "Count validation failed successfully.")
+
+                 (log "Closing resources.")
+                 (j/call server :kill)
+                 (.close browser)
+                 (log "Resources closed.")
+                 (done))
+               #(catch-fail % done server browser))))))
 
 (t/run-tests *ns*)
