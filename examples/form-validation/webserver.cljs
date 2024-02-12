@@ -72,7 +72,7 @@
       (email-form data))
     (.send res rendered-html)))
 
-(defn handle-csrf-error [err req res n]
+(defn handle-csrf-error [err _req res n]
   (if (= (aget err "code") "EBADCSRFTOKEN")
     (-> res
         (.status 403)
