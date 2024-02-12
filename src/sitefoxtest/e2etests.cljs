@@ -159,6 +159,34 @@
                  (check-for-no-text page "Signed in" "a[href='/auth/sign-in']"
                                     "User is correctly signed out on homepage.")
 
+                 ; sign in again
+                 (.goto page base-url)
+                 ; click "Sign in"
+                 (-> page (.locator "a[href='/auth/sign-in']") .click)
+
+                 ; do a failed sign in
+                 (-> page (.locator "input[name='email']")
+                     (.fill "goober@example.com"))
+                 (-> page (.locator "input[name='password']")
+                     (.fill "testerwrong"))
+                 (-> page
+                     (.locator "button:has-text('Sign in')")
+                     .click)
+                 (check-for-text page "Invalid email or password"
+                                 "Incorrect password shows a message.")
+
+                 ; successful sign in
+                 (-> page (.locator "input[name='password']")
+                     (.fill "tester"))
+                 (-> page
+                     (.locator "button:has-text('Sign in')")
+                     .click)
+                 (check-for-text
+                   page "Signed in"
+                   "User is correctly signed in again.")
+
+                 ; test forgot password flow
+
                  (log "Closing resources.")
                  (j/call server :kill)
                  (.close browser)
