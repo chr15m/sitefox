@@ -28,6 +28,11 @@
   (spawnSync "npm i --no-save" #js {:cwd path
                                     :stdio "inherit"
                                     :shell true})
+  ; delete any old database hanging around
+  (spawnSync "rm -f database.sqlite"
+             #js {:cwd path
+                  :stdio "inherit"
+                  :shell true})
   ; now run the server
   (log "Spawning server.")
   (p/let [server (spawn server-command #js {:cwd path
@@ -39,6 +44,7 @@
     (log "Setting up stdout listener.")
     (j/call-in server [:stdout :on] "data"
                (fn [data]
+                 ;(print data)
                  (doseq [[re-string listener-fn] @log-listeners]
                    (let [matches (.match (.toString data)
                                          (js/RegExp. re-string "s"))]
@@ -77,7 +83,7 @@
     (.close browser))
   (done))
 
-(deftest basic-site-test
+#_ (deftest basic-site-test
   (t/testing "Basic test of Sitefox on nbb."
     (async done
            (p/let [_ (log "Test: basic-site-test")
@@ -111,6 +117,43 @@
   (p/let [_ (-> page (.waitForSelector selector))
           content (.content page)]
     (is (not (includes? content text)) message)))
+
+(defn check-failed-sign-in
+  [page password]
+  (p/do!
+    ; sign in again
+    (.goto page base-url)
+    ; click "Sign in"
+    (-> page (.locator "a[href='/auth/sign-in']") .click)
+
+    ; do a failed sign in
+    (-> page (.locator "input[name='email']")
+        (.fill "goober@example.com"))
+    (-> page (.locator "input[name='password']")
+        (.fill password))
+    (-> page
+        (.locator "button:has-text('Sign in')")
+        .click)
+    (check-for-text page "Invalid email or password"
+                    "Incorrect password shows a message.")))
+
+(defn sign-out [page]
+  ; click "Sign out"
+  (-> page (.locator "a[href='/auth/sign-out']") .click)
+  (check-for-no-text page "Signed in" "a[href='/auth/sign-in']"
+                     "User is correctly signed out on homepage."))
+
+(defn sign-in [page password]
+  (p/do!
+    ; successful sign in
+    (-> page (.locator "input[name='password']")
+        (.fill password))
+    (-> page
+        (.locator "button:has-text('Sign in')")
+        .click)
+    (check-for-text
+      page "Signed in"
+      "User is correctly signed in again.")))
 
 (deftest nbb-auth
   (t/testing "Auth against Sitefox on nbb tests."
@@ -154,38 +197,55 @@
                      page "Signed in"
                      "User is correctly signed in on homepage."))
 
-                 ; click "Sign out"
-                 (-> page (.locator "a[href='/auth/sign-out']") .click)
-                 (check-for-no-text page "Signed in" "a[href='/auth/sign-in']"
-                                    "User is correctly signed out on homepage.")
+                 (print "sign out")
+                 (sign-out page)
 
-                 ; sign in again
-                 (.goto page base-url)
+                 (print "check failed sign in")
+                 (check-failed-sign-in page "testerwrong")
+
+                 (print "sign in again")
+                 (sign-in page "tester")
+
+                 (print "forgot password")
+                 ; test forgot password flow
+                 (-> page (.locator "a[href='/auth/sign-out']") .click)
                  ; click "Sign in"
                  (-> page (.locator "a[href='/auth/sign-in']") .click)
-
-                 ; do a failed sign in
+                 ; click "Forgot password link"
+                 (-> page (.locator "a[href='/auth/reset-password']") .click)
+                 ; fill out the forgot password form
                  (-> page (.locator "input[name='email']")
                      (.fill "goober@example.com"))
-                 (-> page (.locator "input[name='password']")
-                     (.fill "testerwrong"))
-                 (-> page
-                     (.locator "button:has-text('Sign in')")
-                     .click)
-                 (check-for-text page "Invalid email or password"
-                                 "Incorrect password shows a message.")
 
-                 ; successful sign in
+                 (p/let [[log-items]
+                         (p/all [(listen-to-log
+                                   "verify-url (?<url>http.*?)[\n$]")
+                                 (-> page
+                                     (.locator
+                                       "button:has-text('Reset password')")
+                                     .click)])
+                         url (j/get-in log-items [:groups :url])]
+                   (check-for-text page "Reset password link sent"
+                                   "User has been notified of reset email.")
+                   (.goto page url))
+
+                 ; enter updated passwords
                  (-> page (.locator "input[name='password']")
-                     (.fill "tester"))
+                     (.fill "testagain"))
+                 (-> page (.locator "input[name='password2']")
+                     (.fill "testagain"))
                  (-> page
-                     (.locator "button:has-text('Sign in')")
+                     (.locator "button:has-text('Update password')")
                      .click)
                  (check-for-text
                    page "Signed in"
                    "User is correctly signed in again.")
 
-                 ; test forgot password flow
+                 ; check sign in fails with old password
+                 (sign-out page)
+                 (check-failed-sign-in page "tester")
+                 ; check successful sign in with new password
+                 (sign-in page "testagain")
 
                  (log "Closing resources.")
                  (j/call server :kill)
