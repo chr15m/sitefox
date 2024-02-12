@@ -301,6 +301,26 @@
                    page "Form complete."
                    "Form submits sucessfully.")
 
+                 ; fill out form correctly but fail csrf
+                 (.goto page base-url)
+
+                 ; fill out bad form details
+                 (-> page (.locator "input[name='name']")
+                     (.fill "Bilbo"))
+                 (-> page (.locator "input[name='date']")
+                     (.fill "2023-06-01"))
+                 (-> page (.locator "input[name='count']")
+                     (.fill "7"))
+                 ; modify csrf field
+                 (-> page
+                     (.evaluate "document.querySelector('input[name=\"_csrf\"]').value='BOGUS'"))
+
+                 (-> page (.locator "button[type='submit']") .click)
+
+                 (check-for-text
+                   page "The form was tampered with."
+                   "CSRF error caught sucessfully.")
+
                  (log "Closing resources.")
                  (j/call server :kill)
                  (.close browser)
