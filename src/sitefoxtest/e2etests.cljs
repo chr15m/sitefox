@@ -100,6 +100,11 @@
           content (.content page)]
     (is (includes? content text) message)))
 
+(defn check-for-no-text [page text selector message]
+  (p/let [_ (-> page (.waitForSelector selector))
+          content (.content page)]
+    (is (not (includes? content text)) message)))
+
 (deftest nbb-auth
   (t/testing "Auth against Sitefox on nbb tests."
     (async done
@@ -127,6 +132,11 @@
                    (check-for-text page "Signed in" "User is correctly signed in after verification.")
                    (.goto page base-url)
                    (check-for-text page "Signed in" "User is correctly signed in on homepage."))
+
+                 ; click "Sign out"
+                 (-> page (.locator "a[href='/auth/sign-out']") .click)
+                 (check-for-no-text page "Signed in" "a[href='/auth/sign-in']"
+                                    "User is correctly signed out on homepage.")
 
                  (log "Closing resources.")
                  (j/call server :kill)
