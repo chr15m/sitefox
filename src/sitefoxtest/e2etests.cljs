@@ -83,7 +83,7 @@
     (.close browser))
   (done))
 
-#_ (deftest basic-site-test
+(deftest basic-site-test
   (t/testing "Basic test of Sitefox on nbb."
     (async done
            (p/let [_ (log "Test: basic-site-test")
