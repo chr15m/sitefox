@@ -283,6 +283,24 @@
                    page "You must enter a quantity between 5 and 10."
                    "Count validation failed successfully.")
 
+                 ; fill out form correctly
+
+                 (.goto page base-url)
+
+                 ; fill out bad form details
+                 (-> page (.locator "input[name='name']")
+                     (.fill "Bilbo"))
+                 (-> page (.locator "input[name='date']")
+                     (.fill "2023-06-01"))
+                 (-> page (.locator "input[name='count']")
+                     (.fill "7"))
+
+                 (-> page (.locator "button[type='submit']") .click)
+
+                 (check-for-text
+                   page "Form complete."
+                   "Form submits sucessfully.")
+
                  (log "Closing resources.")
                  (j/call server :kill)
                  (.close browser)
