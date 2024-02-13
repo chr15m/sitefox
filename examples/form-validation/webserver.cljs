@@ -37,7 +37,14 @@
       (when (aget ve "count")
         [:p.warning (aget ve "count" "message")])
       [:p [:input {:name "_csrf" :type "hidden" :default-value csrf-token}]]
-      [:button {:type "submit"} "Submit"]]]))
+      [:button {:type "submit"} "Submit"]]
+     [:h3 "Fetch POST test"]
+     [:div#ajaxresult]
+     [:button#ajax "Send fetch request"]
+     [:script {:dangerouslySetInnerHTML
+               {:__html
+                "ajax.onclick=()=>{fetch('/ajax',{'method':'POST','data':'hello','headers':{'Content-Type':'text/plain'}})
+                .then(r=>r.text()).then(d=>{ajaxresult.innerHTML=d})}"}}]]))
 
 (defn view:thank-you []
   [:div
@@ -83,6 +90,7 @@
   (web/reset-routes app)
   (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
   (.use app handle-csrf-error)
+  (.post app "/ajax" (fn [req res] (.send res (aget req "body"))))
   (.use app "/" serve-form))
 
 (defonce serve
