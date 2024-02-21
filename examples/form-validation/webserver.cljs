@@ -21,6 +21,15 @@
    :date "You must enter a valid date in YYYY-MM-DD format."
    :count "You must enter a quantity between 5 and 10."})
 
+(def button-script
+  (str
+  "token=document.cookie.split('; ')
+  .find((row)=>row.startsWith('XSRF-TOKEN='))?.split('=')[1];
+  ajax.onclick=()=>{fetch('/ajax',
+                {'method':'POST','body':'received!',
+                 'headers':{'Content-Type':'text/plain','XSRF-Token':token}})
+                .then(r=>r.text()).then(d=>{ajaxresult.innerHTML=d})}"))
+
 (defn view:form [csrf-token data validation-errors]
   (let [ve (or validation-errors #js {})
         data (or data #js {})]
@@ -42,9 +51,7 @@
      [:div#ajaxresult]
      [:button#ajax "Send fetch request"]
      [:script {:dangerouslySetInnerHTML
-               {:__html
-                "ajax.onclick=()=>{fetch('/ajax',{'method':'POST','data':'hello','headers':{'Content-Type':'text/plain'}})
-                .then(r=>r.text()).then(d=>{ajaxresult.innerHTML=d})}"}}]]))
+               {:__html button-script}}]]))
 
 (defn view:thank-you []
   [:div
@@ -90,7 +97,7 @@
   (web/reset-routes app)
   (web/static-folder app "/css" "node_modules/minimal-stylesheet/")
   (.use app handle-csrf-error)
-  (.post app "/ajax" (fn [req res] (.send res (aget req "body"))))
+  (.post app "/ajax" (fn [req res] (js/console.log (aget req "body")) (.send res (aget req "body"))))
   (.use app "/" serve-form))
 
 (defonce serve

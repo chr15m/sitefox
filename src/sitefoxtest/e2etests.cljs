@@ -331,7 +331,18 @@
                    ; then reload the first page to get a new token
                    (.goto page (str base-url "?hello=1"))
                    ; check the second tab can still successfully submit
-                   (check-form-submit page2))
+                   (check-form-submit page2)
+                   ; close the page2 tab
+                   (.close page2))
+
+                 ; Check that fetch requests still work with CSRF protection in place
+                 (p/all [; click the ajax POST submit button
+                         (-> page (.locator "button#ajax") .click)
+                         ; wait for waitForResponse fetch request loading to complete
+                         (.waitForResponse page #(.includes (.url %) "/ajax"))])
+                 (check-for-text
+                   page "received!"
+                   "The POST fetch request failed.")
 
                  (log "Closing resources.")
                  (j/call server :kill)
@@ -340,4 +351,5 @@
                  (done))
                #(catch-fail % done server browser))))))
 
+; (t/run-test sitefoxtest.e2etests/nbb-forms)
 (t/run-tests *ns*)
