@@ -107,6 +107,7 @@
                  (log "Test done. Killing server.")
                  (j/call server :kill)
                  (log "After server.")
+                 (print)
                  (done))
                #(catch-fail % done server))))))
 
