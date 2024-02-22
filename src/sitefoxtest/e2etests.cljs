@@ -48,9 +48,10 @@
     (j/call-in server [:stdout :on] "data" #(console-listener js/console.log (aget env "DEBUG") %))
     (j/call-in server [:stderr :on] "data" #(console-listener js/console.error true %))
     (j/call-in server [:on] "exit" (fn [code]
-                                     (js/console.log "Server exited with code" code)
-                                     (js/console.log "Set DEBUG=1 to see stderr.")
-                                     (j/call js/process :exit code)))
+                                     (when (> code 0)
+                                       (js/console.log "Server exited with code: " code)
+                                       (js/console.log "Set DEBUG=1 to see stderr.")
+                                       (j/call js/process :exit code))))
     (p/let [port-info (wait-for-port #js {:host host :port port})
             pid (j/get server :pid)]
       (log "Port found, server running with PID" pid)
