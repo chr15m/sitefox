@@ -33,9 +33,9 @@
           :cljs
           ["node-html-parser" :refer [parse]])
        #?(:org.babashka/nbb
-          ["csurf$default" :as r-csrf]
+          ["csrf-csrf" :refer [doubleCsrf]]
           :cljs
-          ["csurf" :as r-csrf])
+          ["csrf-csrf" :refer [doubleCsrf]])
        #?(:org.babashka/nbb
           ["keyv$default" :as r-Keyv]
           :cljs
@@ -61,7 +61,7 @@
      (def cookies r-cookies)
      (def body-parser r-body-parser)
      (def session r-session)
-     (def csrf r-csrf)
+     (def csrf doubleCsrf)
      (def serve-static r-serve-static)
      (def morgan r-morgan)
      (def parse-html parse)
