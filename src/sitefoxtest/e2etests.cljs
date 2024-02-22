@@ -22,6 +22,16 @@
 
 (j/assoc! env "BIND_ADDRESS" host)
 
+(defn console-listener [print-fn debug data]
+  (when debug
+    (print-fn (.toString data)))
+  (doseq [[re-string listener-fn] @log-listeners]
+    (let [matches (.match (.toString data)
+                          (js/RegExp. re-string "s"))]
+      (when matches
+        (listener-fn matches)
+        (swap! log-listeners disj [re-string listener-fn])))))
+
 (defn run-server [path server-command port]
   ; delete any old database hanging around
   (spawnSync "rm -f database.sqlite"
@@ -33,24 +43,20 @@
   (p/let [server (spawn server-command #js {:cwd path
                                             ;:stdio "inherit"
                                             :shell true
-                                            :detach true})
-          port-info (wait-for-port #js {:host host :port port})
-          pid (j/get server :pid)]
-    (log "Setting up stdout listener.")
-    (j/call-in server [:stdout :on] "data"
-               (fn [data]
-                 ;(print data)
-                 (doseq [[re-string listener-fn] @log-listeners]
-                   (let [matches (.match (.toString data)
-                                         (js/RegExp. re-string "s"))]
-                     (when matches
-                       (listener-fn matches)
-                       (swap! log-listeners disj [re-string listener-fn]))))
-                 #_ (log "Server:" (.toString data))))
-    (log "Port found, server running with PID" pid)
-    (j/assoc! port-info
-              :process server
-              :kill (p/promisify #(kill pid "SIGTERM" %)))))
+                                            :detach true})]
+    (log "Setting up stdout/err listeners.")
+    (j/call-in server [:stdout :on] "data" #(console-listener js/console.log (aget env "DEBUG") %))
+    (j/call-in server [:stderr :on] "data" #(console-listener js/console.error true %))
+    (j/call-in server [:on] "exit" (fn [code]
+                                     (js/console.log "Server exited with code" code)
+                                     (js/console.log "Set DEBUG=1 to see stderr.")
+                                     (j/call js/process :exit code)))
+    (p/let [port-info (wait-for-port #js {:host host :port port})
+            pid (j/get server :pid)]
+      (log "Port found, server running with PID" pid)
+      (j/assoc! port-info
+                :process server
+                :kill (p/promisify #(kill pid "SIGTERM" %))))))
 
 (defn listen-to-log [re-string]
   (js/Promise.
