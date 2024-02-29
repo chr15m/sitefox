@@ -609,7 +609,8 @@
       (n err))))
 
 (defn setup-auth
-  "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'."
+  "Set up passport based authentication. The `sign-out-redirect-url` defaults to '/'.
+  You may also pass `?next=RELATIVE-URL` to dynamically set the redirect URL."
   [app & [sign-out-redirect-url]]
   (j/call app :use (.authenticate passport "session"))
   ; TODO: It is a good idea to use POST or DELETE requests instead of GET requests
@@ -620,7 +621,9 @@
                     (fn [err]
                       (if err
                         (done err)
-                        (.redirect res (build-absolute-uri req (or sign-out-redirect-url "/"))))))))
+                        (.redirect res (build-absolute-uri
+                                         req
+                                         (or (j/get-in req [:query :next]) sign-out-redirect-url "/"))))))))
   (when (not (j/get passport :_sitefox_setup_auth))
     (.serializeUser passport serialize-user)
     (.deserializeUser passport deserialize-user)
