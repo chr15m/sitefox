@@ -65,7 +65,7 @@
   (second (re-find (js/RegExp. (str cookie-name "=([^;]+)")) (or cookies (aget js/document "cookie")))))
 
 (defn csrf-token
-  "Returns the CSRF token passed by Sitefox in the `XSRF-TOKEN` header.
+  "Returns the CSRF token passed by Sitefox in the `XSRF-TOKEN` cookie.
    Pass this value when doing POST requests via ajax:
 
    ```clojure
@@ -75,6 +75,31 @@
                                 :XSRF-Token (csrf-token)}
                                 :body (js/JSON.stringify (clj->js data))})
    ```
+
+   **Note**: passing the token via client side cookie is now deprecated.
+   If you want to re-enable it set the client side environment variable `SEND-CSRF-COOKIE`,
+   and then this function will work again.
+
+   See the README for more details: <https://github.com/chr15m/sitefox/#csrf-protection>
   "
   []
   (get-cookie "XSRF-TOKEN"))
+
+(defn fetch-csrf-token
+  "Returns a promise which resolves to a string containing the CSRF token fetched from the Sitefox backend server.
+  Pass this value as the X-XSRF-TOKEN when doing POST requests via ajax fetch:
+  
+  ```clojure
+    (-> (fetch-csrf-token)
+        (.then (fn [token]
+                 (js/fetch \"/api/endpoint\"
+                           #js {:method \"POST\"
+                                :headers #js {:Content-Type \"application/json\"
+                                              :X-XSRF-TOKEN token} ; <- use token here
+                                :body (js/JSON.stringify (clj->js some-data))}))))
+  ```
+  "
+  []
+  (->
+    (js/fetch "/_csrf-token")
+    (.then #(.json %))))

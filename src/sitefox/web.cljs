@@ -78,25 +78,23 @@
   (let [pre-csrf-router (Router.)]
     (.use app pre-csrf-router)
     (j/assoc! app :pre-csrf-router pre-csrf-router))
-  (.post app (fn [req _res done]
-               (print "x-csrf-token"
-                      (j/get req [:headers :x-csrf-token]))
-               (done)))
-  ;(.get app "/_csrf-token" (fn [req res] (.json res generateToken)))
   (.use app (j/get (csrf #js {:getSecret (fn [] (env "SECRET" "DEVMODE"))
                               :cookieOptions #js {:httpOnly true :sameSite "Strict" :secure true}
                               :size 32
                               :cookieName "XSRF-TOKEN"
                               :getTokenFromRequest (fn [req]
-                                                     (print "getTokenFromRequest")
-                                                     (js/console.log "check csrf body:" (j/get-in req [:body :_csrf]))
-                                                     (js/console.log "check csrf header:" (j/get-in req [:header :XSRF-TOKEN]))
-                                                     (js/console.log "check csrf cookie:" (-> (j/get-in req [:cookies :XSRF-TOKEN]) (.split "|") first))
                                                      (or (j/get-in req [:body :_csrf])
-                                                         (j/get-in req [:headers :XSRF-TOKEN])
-                                                         (-> (j/get-in req [:cookies :XSRF-TOKEN]) (.split "|") first)))})
+                                                         (j/call req :get "xsrf-token")
+                                                         (j/call req :get "x-xsrf-token")))})
                    :doubleCsrfProtection))
-  ;(.use app (fn [req res done] (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken) #js {:secure true :sameSite "Strict"}) (done)))
+  (.get app "/_csrf-token"
+        (fn [req res]
+          (.json res (j/call req :csrfToken))))
+  (when (env "SEND-CSRF-COOKIE")
+    (.get app (fn [req res done]
+                (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken)
+                        #js {:secure true :sameSite "Strict"})
+                (done))))
   app)
 
 (defn static-folder
