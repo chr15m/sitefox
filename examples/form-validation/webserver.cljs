@@ -23,12 +23,15 @@
 
 (def button-script
   (str
-  "token=document.cookie.split('; ')
-  .find((row)=>row.startsWith('XSRF-TOKEN='))?.split('=')[1];
-  ajax.onclick=()=>{fetch('/ajax',
-                {'method':'POST','body':'received!',
-                 'headers':{'Content-Type':'text/plain','XSRF-Token':token}})
-                .then(r=>r.text()).then(d=>{ajaxresult.innerHTML=d})}"))
+    "ajax.onclick=()=>{
+       fetch('/_csrf-token').then(r=>r.json()).then((token)=>{
+         console.log('token: ', token);
+         fetch('/ajax',
+           {'method':'POST','body':'received!',
+            'headers':{'Content-Type':'text/plain','X-XSRF-TOKEN':token}}
+         ).then(r=>r.text()).then(d=>{ajaxresult.innerHTML=d})
+       });
+    }"))
 
 (defn view:form [csrf-token data validation-errors]
   (let [ve (or validation-errors #js {})

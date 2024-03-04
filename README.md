@@ -415,25 +415,37 @@ Also see the [send-email example](https://github.com/chr15m/sitefox/tree/main/ex
 
 See the [form validation example](https://github.com/chr15m/sitefox/tree/main/examples/form-validation) which uses [node-input-validator](https://www.npmjs.com/package/node-input-validator) and checks for CSRF problems.
 
+#### CSRF protection
+
 To ensure you can `POST` without CSRF warnings you should create a hidden element like this (Reagent syntax):
 
 ```clojure
 [:input {:name "_csrf" :type "hidden" :default-value (.csrfToken req)}]
 ```
 
-If you're making an ajax `POST` request from the client side, you should pass the CSRF token as a header. A valid token is available in the document's cookie and you can add it to the headers of a fetch request as follows:
+If you're making an ajax `POST` request from the client side, you should pass the CSRF token as a header.
+A valid token is available as a string at the JSON endpoint `/_csrf-token` and you can fetch it using `fetch-csrf-token`
+and add it to the headers of a fetch request as follows:
 
 ```clojure
-(ns n (:require [sitefox.ui :refer [csrf-token]]))
+(ns n (:require [sitefox.ui :refer [fetch-csrf-token]]))
 
-(js/fetch "/api/endpoint"
-          #js {:method "POST"
-               :headers #js {:Content-Type "application/json"
-                             :XSRF-Token (csrf-token)}
-               :body (js/JSON.stringify (clj->js data))})
+(-> (fetch-csrf-token)
+    (.then (fn [token]
+             (js/fetch "/api/endpoint"
+                       #js {:method "POST"
+                            :headers #js {:Content-Type "application/json"
+                                          :X-XSRF-TOKEN token} ; <- use token here
+                            :body (js/JSON.stringify (clj->js some-data))}))))
 ```
 
-In some rare circumstances you may wish to turn off CSRF checking (for example posting to an API from a non-browser device).
+**Note**: you can fetch the CSRF token from a client side cookie instead if you set the environment variable `SEND-CSRF-TOKEN`.
+This was the default in previous Sitefox versions.
+When set, Sitefox will send the token on every GET request in the client side cookie
+`XSRF-TOKEN` and this can be retrieved with the `ui/csrf-token` function.
+This is a valid, but less secure form of CSRF protection.
+
+In some rare circumstances you may wish to turn off CSRF checks (for example posting to an API from a non-browser device).
 If you know what you are doing you can use the `pre-csrf-router` to add routes which bypass the CSRF checking:
 
 ```clojure

@@ -9,7 +9,7 @@
 
 (defonce server (atom nil))
 
-(defn home-page [req res]
+(defn home-page [_req res]
   (.send res (render [:h1 "Hello world! yes"])))
 
 (defn setup-routes [app]

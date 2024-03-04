@@ -17,7 +17,6 @@
   (p/catch
     (p/let [self *file*
             [app host port] (web/start)]
-      (print "here")
       (setup-routes app)
       (nbb-reloader self #(setup-routes app))
       (println "Serving on" (str "http://" host ":" port)))
