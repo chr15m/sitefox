@@ -4,7 +4,7 @@ To run this example:
 
 1. Clone this repo.
 2. Go into `examples/shadow-cljs`.
-3. `npm i`
+3. `npm i --no-save`
 4. `npm run serve`
 
 This will start the live-reloading shadow-cljs server compiling devserver.js and run it.
