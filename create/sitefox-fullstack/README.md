@@ -3,7 +3,7 @@ Set up a full-stack ClojureScript web server in one command using
 and [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html).
 
 ```shell
-npm create sitefox-shadow-fullstack mywebapp
+npm create sitefox-fullstack mywebapp
 cd mywebapp
 npm install
 make watch
