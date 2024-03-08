@@ -1,10 +1,10 @@
 {
-  "name": "create-sitefox-shadow-fullstack",
+  "name": "create-sitefox-fullstack",
   "description": "Set up a ClojureScript web server in one command with sitefox and shadow-cljs.",
-  "repository": "https://github.com/chr15m/create-sitefox-shadow-fullstack",
-  "version": "0.0.7",
+  "repository": "https://github.com/chr15m/sitefox",
+  "version": "0.0.8",
   "bin": {
-    "create-sitefox-shadow-fullstack": "index.js"
+    "create-sitefox-fullstack": "index.js"
   },
   "dependencies": {
     "fs-extra": "^9.0.1",
