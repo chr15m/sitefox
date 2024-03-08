@@ -1,0 +1,15 @@
+{:source-paths ["src" "node_modules/sitefox/src"]
+ :dependencies [[reagent "1.0.0-alpha2"]
+                [applied-science/js-interop "0.2.7"]
+                [funcool/promesa "6.0.2"]]
+ :builds {:server {:target :node-script
+                   :output-to "devserver.js"
+                   :main NAME.server/main!
+                   :release {:output-to "build/server.js"}}
+          :app {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:init-fn NAME.ui/main!}}
+                :devtools {:watch-dir "public"}
+                :release {:output-dir "build/public/js"}}}}
+

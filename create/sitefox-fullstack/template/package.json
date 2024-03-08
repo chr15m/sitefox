@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "concurrently": "^8.2.1",
+    "shadow-cljs": "^2.25.3",
+    "sitefox": "github:chr15m/sitefox"
+  }
+}

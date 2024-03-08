@@ -1,0 +1,32 @@
+html, body, #app, #loading {
+  height: 100%;
+}
+
+body {
+  max-width: 100%;
+  width: 800px;
+  font-family: Helvetica, Arial, sans-serif;
+  margin: auto;
+}
+
+#loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#loading div {
+  animation: spin 0.33s linear infinite;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  border: 3px solid transparent;
+  border-left: 3px solid silver;
+  border-right: 3px solid silver;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
