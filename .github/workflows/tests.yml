@@ -20,15 +20,15 @@ jobs:
 
     steps:
     - name: "Checkout code"
-      uses: "actions/checkout@v2"
+      uses: actions/checkout@v4
 
     - name: Set up node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.version }}
 
     - name: Prepare java
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
         distribution: "adopt"
         java-version: 11
@@ -39,7 +39,7 @@ jobs:
         cli: 1.10.3.1040
 
     - name: Cache clojure dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.m2/repository
