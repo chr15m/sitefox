@@ -8,9 +8,11 @@
   (:require
     [clojure.test :refer-macros [is async use-fixtures]]
     [promesa.core :as p]
+    [applied-science.js-interop]
     [sitefox.util :refer [env]]
     [sitefox.deps :refer [Keyv]]))
 
+(def default-page-size 10) ; when iterating through results get this many at once
 (def database-url (env "DATABASE_URL" "sqlite://./database.sqlite"))
 
 (defn kv
@@ -50,6 +52,19 @@
     (Keyv. database-url)
     (aget "opts" "store")))
 
+; recursive function to fill results with pages of filtered select rows
+(defn perform-select [c select-statement deserialize kv-ns pre page-size page filter-function results]
+  (p/let [rows (.query c select-statement #js [kv-ns (or pre "") page-size (* page page-size)])
+          filter-function (or filter-function identity)]
+    (doseq [row rows]
+      (let [_k (aget row "key") ; TODO: include-keys should return [k v] tuples
+            v (aget (deserialize (aget row "value")) "value")]
+        (when (filter-function v)
+          (.push results v))))
+    (if (<= (aget rows "length") 0)
+      results
+      (perform-select c select-statement deserialize kv-ns pre page-size (inc page) filter-function results))))
+
 (defn ls
   "List all key-value entries matching a particular namespace and prefix.
   Returns a promise that resolves to rows of JSON objects containing the values.
@@ -75,17 +90,13 @@
                       (.clear d)
                       (done)))))}
   [kv-ns & [pre db filter-function]]
-  ; TODO: run the map & filter over each row streaming out
-  (let [c (or db (client))]
-    (->
-      (.query c (str "select * from keyv where key like '" kv-ns ":" (or pre "") "%'"))
-      (.then #(.map % (fn [row]
-                        (let [_k (aget row "key")
-                              v (aget (-> c .-opts (.deserialize (aget row "value"))) "value")]
-                          v))))
-      (.then (if filter-function
-               #(.filter % filter-function)
-               identity)))))
+  (p/let [c (or db (client))
+          dialect (aget c "opts" "dialect")
+          select-statement (case dialect
+                             "sqlite" "SELECT * FROM keyv WHERE key LIKE ? || ':' || ? || '%' LIMIT ? OFFSET ?"
+                             "SELECT * FROM keyv WHERE key LIKE $1 || ':' || $2 || '%' LIMIT $3 OFFSET $4")
+          results #js []]
+    (perform-select c select-statement (aget c "opts" "deserialize") kv-ns pre default-page-size 0 filter-function results)))
 
 (defn f
   "Filter all key-value entries matching a particular namespace and prefix,
@@ -104,6 +115,16 @@
                             two-test (set (filter filter-fn (map second (subvec fixture 3 6))))]
                       (is (= (set one) one-test))
                       (is (= (set two) two-test))
+                      (.clear d)
+                      (p/let [fixture (map (fn [i]
+                                             [(str "item-" i)
+                                             #js {:thingo i}])
+                                           (range 2000))
+                              _ (p/all (map #(.set d (first %) (second %)) fixture))
+                              filter-fn #(= (mod (aget % "thingo") 327) 1)
+                              results (f "tests" filter-fn)]
+                        (is (= (set (js->clj results :keywordize-keys true))
+                               #{{:thingo 1} {:thingo 328} {:thingo 655} {:thingo 982} {:thingo 1309} {:thingo 1636} {:thingo 1963}})))
                       (.clear d)
                       (done)))))}
   [kv-ns filter-function & [pre db]]
