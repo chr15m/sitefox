@@ -66,6 +66,8 @@ jobs:
         sudo apt install postgresql libpq-dev
         sudo service postgresql start
         sudo -u postgres createuser --superuser "$USER"
+      if: runner.os == 'Linux'
 
     - name: Run the tests on Postgres
       run: npm run test-postgres
+      if: runner.os == 'Linux'
