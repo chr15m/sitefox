@@ -60,3 +60,12 @@ jobs:
 
     - name: Run the e2e tests
       run: npm run test-e2e
+
+    - name: Set up PostgreSQL
+      run: |
+        sudo apt install postgresql libpq-dev
+        sudo service postgresql start
+        sudo -u postgres createuser --superuser "$USER"
+
+    - name: Run the tests on Postgres
+      run: npm run test-postgres

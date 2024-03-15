@@ -6,7 +6,7 @@
 
   `DATABASE_URL` for Postgres: `postgresql://[user[:password]@][netloc][:port][,...][/dbname][?param1=value1&...]`"
   (:require
-    [clojure.test :refer-macros [is async]]
+    [clojure.test :refer-macros [is async use-fixtures]]
     [promesa.core :as p]
     [sitefox.util :refer [env]]
     [sitefox.deps :refer [Keyv]]))
@@ -37,9 +37,13 @@
   {:test (fn []
            (async done
              (p/let [c (client)
-                     v (.query c "SELECT sqlite_version()")]
+                     dialect (aget c "opts" "dialect")
+                     version-fn (case dialect
+                                  "sqlite" "sqlite_version()"
+                                  "version()")
+                     v (.query c (str "SELECT " version-fn " AS v"))]
                (is (aget c "query"))
-               (is (-> v (aget 0) (aget "sqlite_version()")))
+               (is (-> v (aget 0) (aget "v")))
                (done))))}
   []
   (->
@@ -114,3 +118,8 @@
                 query (aget db "opts" "store" "query")
                 version-query (query "SELECT version();")]
           version-query)))))
+
+; make sure postgres is set up to run the tests
+(use-fixtures
+  :once {:before #(async done (p/do! (ensure-local-postgres-db-exists) (done)))
+         #_#_ :after #(async done (done))})

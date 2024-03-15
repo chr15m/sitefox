@@ -1,0 +1,4 @@
+#!/bin/sh
+
+dropdb sitefoxtest 2>/dev/null || echo "Not dropping database."
+createdb sitefoxtest && SECRET=testing TESTING=1 DATABASE_URL="postgres://%2Fvar%2Frun%2Fpostgresql/sitefoxtest" npx shadow-cljs compile test

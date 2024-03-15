@@ -234,13 +234,15 @@ See the full [documentation for the db module](https://chr15m.github.io/sitefox/
 
 By default a local sqlite database is used and you can start persisting data on the server immediately without any configuration.
 Once you move to production you can configure another database using the environment variable `DATABASE_URL`.
-For example, to use a postgres database called "somedatabase":
+For example, to use a postgres database called "DBNAME" you can access it as follows (depending on your network/local setup):
 
 ```
-DATABASE_URL=postgres://someuser:somepassword@somehost:5432/somedatabase
+DATABASE_URL="postgres://%2Fvar%2Frun%2Fpostgresql/DBNAME"
+DATABASE_URL=postgres://someuser:somepassword@somehost:5432/DBNAME
+DATABASE_URL=postgres:///somedatabase
 ```
 
-Or simply `DATABASE_URL=postgres:///somedatabase` if your user has local access on the deploy server.
+Note that you will also need to `npm install @keyv/postgres` if you want to use the Postgres backend.
 
 To use the database and key-value interface first require the database module:
 
