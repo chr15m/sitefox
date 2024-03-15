@@ -52,7 +52,14 @@
 
 (defn ls
   "List all key-value entries matching a particular namespace and prefix.
-  Returns a promise that resolves to rows of JSON."
+  Returns a promise that resolves to rows of JSON objects containing the values.
+
+  - `kv-ns` is the namespace/table name.
+  - `pre` substring to filter key by i.e. keys matching `kv-ns:pre...`.
+  - `db` an database handle (defaults to the one defined in `DATABASE_URL`).
+  - `filter-function` filter every value through this function, removing falsy results."
+  ; - `callback-function` instead of returning an array of results, fire a callback for every matching row.
+  ; - `include-keys` return arrays of `[key, value]` instead of `value` objects.
   {:test (fn []
            (when (env "TESTING")
              (async done
@@ -69,17 +76,16 @@
                       (done)))))}
   [kv-ns & [pre db filter-function]]
   ; TODO: run the map & filter over each row streaming out
-  (->
-    (.query (or db (client)) (str "select * from keyv where key like '" kv-ns ":" (or pre "") "%'"))
-    (.then #(.map % (fn [row]
-                      (let [k (aget row "key")
-                            v (aget (js/JSON.parse (aget row "value")) "value")]
-                        (when (= (type v) js/Object)
-                          (aset v "kind" k))
-                        v))))
-    (.then (if filter-function
-             #(.filter % filter-function)
-             identity))))
+  (let [c (or db (client))]
+    (->
+      (.query c (str "select * from keyv where key like '" kv-ns ":" (or pre "") "%'"))
+      (.then #(.map % (fn [row]
+                        (let [_k (aget row "key")
+                              v (aget (-> c .-opts (.deserialize (aget row "value"))) "value")]
+                          v))))
+      (.then (if filter-function
+               #(.filter % filter-function)
+               identity)))))
 
 (defn f
   "Filter all key-value entries matching a particular namespace and prefix,
