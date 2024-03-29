@@ -85,6 +85,58 @@
     (.close browser))
   (done))
 
+(deftest basic-shadow-dev-test
+  (t/testing "Basic test of Sitefox on shadow-cljs."
+    (async done
+           (p/let [_ (log "Test: basic-shadow-dev-test")
+                   server (run-server "examples/shadow-cljs"
+                                      "npm i --no-save; npm run serve"
+                                      8000)]
+             (p/catch
+               (p/let [res (js/fetch base-url)
+                       text (.text res)]
+                 (log "Starting test checks.")
+                 (is (j/get-in server [:process :pid])
+                     "Server is running?")
+                 (is (j/get server :open)
+                     "Server port is open?")
+                 (is (j/get res :ok)
+                     "Was server response ok?")
+                 (is (includes? text "Hello")
+                     "Server response includes 'Hello' text?")
+                 (log "Test done. Killing server.")
+                 (j/call server :kill)
+                 (log "After server.")
+                 (print)
+                 (done))
+               #(catch-fail % done server))))))
+
+(deftest basic-compiled-shadow-test
+  (t/testing "Basic test of Sitefox on compiled shadow-cljs."
+    (async done
+           (p/let [_ (log "Test: basic-compiled-shadow-test")
+                   server (run-server "examples/shadow-cljs"
+                                      "npm i --no-save; npm run serve-live"
+                                      8000)]
+             (p/catch
+               (p/let [res (js/fetch base-url)
+                       text (.text res)]
+                 (log "Starting test checks.")
+                 (is (j/get-in server [:process :pid])
+                     "Server is running?")
+                 (is (j/get server :open)
+                     "Server port is open?")
+                 (is (j/get res :ok)
+                     "Was server response ok?")
+                 (is (includes? text "Hello")
+                     "Server response includes 'Hello' text?")
+                 (log "Test done. Killing server.")
+                 (j/call server :kill)
+                 (log "After server.")
+                 (print)
+                 (done))
+               #(catch-fail % done server))))))
+
 (deftest basic-site-test
   (t/testing "Basic test of Sitefox on nbb."
     (async done
