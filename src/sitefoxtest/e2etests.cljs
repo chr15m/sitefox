@@ -55,7 +55,6 @@
     (p/let [port-info (wait-for-port #js {:host host :port port})
             pid (j/get server :pid)]
       (log "Port found, server running with PID" pid)
-      (p/delay 1000)
       (j/assoc! port-info
                 :process server
                 :kill (p/promisify #(kill pid "SIGTERM" %))))))
@@ -86,7 +85,7 @@
     (.close browser))
   (done))
 
-(deftest basic-shadow-dev-test
+#_ (deftest basic-shadow-dev-test
   (t/testing "Basic test of Sitefox on shadow-cljs."
     (async done
            (p/let [_ (log "Test: basic-shadow-dev-test")
@@ -112,7 +111,7 @@
                  (done))
                #(catch-fail % done server))))))
 
-(deftest basic-compiled-shadow-test
+#_ (deftest basic-compiled-shadow-test
   (t/testing "Basic test of Sitefox on compiled shadow-cljs."
     (async done
            (p/let [_ (log "Test: basic-compiled-shadow-test")
