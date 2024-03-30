@@ -7,8 +7,8 @@
   "dependencies": {
     "@keyv/sqlite": "3.6.5",
     "cookie-parser": "1.4.5",
-    "csrf-csrf": "^3.0.3",
-    "express": "4.18.2",
+    "csrf-csrf": "3.0.3",
+    "express": "4.19.2",
     "express-session": "1.17.2",
     "html-to-text": "8.1.0",
     "json-stringify-safe": "5.0.1",
@@ -26,12 +26,12 @@
     "tmp": "0.2.1"
   },
   "devDependencies": {
-    "@keyv/postgres": "^1.4.10",
-    "nbb": "^1.2.182",
+    "@keyv/postgres": "1.4.10",
+    "nbb": "1.2.182",
     "playwright": "1.30.0",
     "shadow-cljs": "2.19.0",
-    "tree-kill": "^1.2.2",
-    "wait-port": "^1.1.0"
+    "tree-kill": "1.2.2",
+    "wait-port": "1.1.0"
   },
   "scripts": {
     "sync-deps": "nbb bin/sync-deps.cljs",
