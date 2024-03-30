@@ -359,12 +359,12 @@
                  (done))
                #(catch-fail % done server browser))))))
 
-#_ (deftest basic-shadow-dev-test
-  (t/testing "Basic test of Sitefox on shadow-cljs."
+(deftest basic-compiled-shadow-test
+  (t/testing "Basic test of Sitefox on compiled shadow-cljs."
     (async done
-           (p/let [_ (log "Test: basic-shadow-dev-test")
+           (p/let [_ (log "Test: basic-compiled-shadow-test")
                    server (run-server "examples/shadow-cljs"
-                                      "npm i --no-save; npm run serve"
+                                      "npm i --no-save; npm run serve-live"
                                       8000)]
              (p/catch
                (p/let [res (js/fetch base-url)
@@ -385,12 +385,12 @@
                  (done))
                #(catch-fail % done server))))))
 
-(deftest basic-compiled-shadow-test
-  (t/testing "Basic test of Sitefox on compiled shadow-cljs."
+(deftest basic-shadow-dev-test
+  (t/testing "Basic test of Sitefox on shadow-cljs."
     (async done
-           (p/let [_ (log "Test: basic-compiled-shadow-test")
+           (p/let [_ (log "Test: basic-shadow-dev-test")
                    server (run-server "examples/shadow-cljs"
-                                      "npm i --no-save; npm run serve-live"
+                                      "npm i --no-save; npm run serve"
                                       8000)]
              (p/catch
                (p/let [res (js/fetch base-url)
