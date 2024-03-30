@@ -55,6 +55,7 @@
     (p/let [port-info (wait-for-port #js {:host host :port port})
             pid (j/get server :pid)]
       (log "Port found, server running with PID" pid)
+      (p/delay 1000)
       (j/assoc! port-info
                 :process server
                 :kill (p/promisify #(kill pid "SIGTERM" %))))))
