@@ -1,4 +1,4 @@
-Web framework for ClojureScript on Node. **WIP**.
+Web framework for ClojureScript on Node.
 
 <p align="center">
   <img src="docs/logo.svg?sanitize=true" alt="Sitefox logo"><br/>
