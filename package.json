@@ -42,5 +42,11 @@
     "test-e2e": "SECRET=testing NODE_OPTIONS='--experimental-fetch --no-warnings' nbb --classpath src src/sitefoxtest/e2etests.cljs",
     "watch": "SECRET=watching TESTING=1 shadow-cljs watch test"
   },
-  "files": ["shadow-cljs.edn", "deps.edn", "src/**", "bin/**", "docs/**"]
+  "files": [
+    "shadow-cljs.edn",
+    "deps.edn",
+    "src/**",
+    "bin/**",
+    "docs/**"
+  ]
 }
