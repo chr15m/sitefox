@@ -1,6 +1,6 @@
 {
   "name": "sitefox",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Backend web framework for Node + ClojureScript",
   "author": "Chris McCormick <chis@mccormick.cx>",
   "homepage": "https://github.com/chr15m/sitefox",
@@ -19,8 +19,8 @@
     "nodemailer": "6.9.9",
     "passport": "0.6.0",
     "passport-local": "1.0.0",
-    "react": "18.1.0",
-    "react-dom": "18.1.0",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
     "rotating-file-stream": "3.0.4",
     "source-map-support": "0.5.21",
     "tmp": "0.2.1"
