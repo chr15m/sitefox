@@ -49,8 +49,11 @@
 
   * Writing rotating logs to `logs/access.log`.
   * Setting up sessions in the configured database.
-  * Parse cookies and body."
-  [app]
+  * Parse cookies and body.
+  
+  Pass the `session-options` map to configure the `express-sessions` package.
+  Sitefox defaults will be shallow-merged with the options map passed in."
+  [app & [session-options]]
   ; emit a warning if SECRET is not set
   (when (nil? (env "SECRET")) (js/console.error "Warning: env var SECRET is not set."))
   (let [logs (path/join server-dir "/logs")
@@ -58,14 +61,19 @@
         kv-session (db/kv "session")
         store (create-store kv-session)]
     ; set up sessions table
-    (.use app (session #js {:secret (env "SECRET" "DEVMODE")
-                            :saveUninitialized false
-                            :resave true
-                            :cookie #js {:secure "auto"
-                                         :httpOnly true
-                                         ; 10 years
-                                         :maxAge (* 10 365 24 60 60 1000)}
-                            :store store}))
+    (.use app
+          (session
+            (clj->js
+              (merge
+                {:secret (env "SECRET" "DEVMODE")
+                 :saveUninitialized true
+                 :resave true
+                 :cookie {:secure "auto"
+                          :httpOnly true
+                          ; 10 years
+                          :maxAge (* 10 365 24 60 60 1000)}
+                 :store store}
+                (js->clj session-options :keywordize-keys true)))))
     ; set up logging
     (.use app (morgan "combined" #js {:stream access-log})))
   ; configure sane server defaults
