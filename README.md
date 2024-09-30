@@ -76,7 +76,7 @@ Add Sitefox to your project as a dependency:
 
 ```
 {:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.22" :git/sha "6c4da4ee90833b5eccb583079a6848e7a86ace8e"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.25" :git/sha "730b6e4dc121622c0f63f965cace55537ff956a3"}}}
 ```
 
 If you're using `npm` you can install sitefox as a dependency that way.
