@@ -10,7 +10,8 @@
   (fs/renameSync "src/sitefox/deps.cljc" "x")
   (fs/writeFileSync "src/sitefox/deps.cljc" "(ns sitefox.deps)\n")
   ; TODO: print stderr
-  (execSync "clojure -X:codox")
+  ;(execSync "clojure -X:codox")
+  (execSync "npx shadow-cljs run sitefox.docs/generate-docs")
   (fs/rmSync "docs/README.md")
   (fs/rmSync "src/sitefox/deps.cljc")
   (fs/renameSync "x" "src/sitefox/deps.cljc"))
