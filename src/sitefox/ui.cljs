@@ -106,14 +106,20 @@
 
 (defn json-post
   "Use HTTP post to send data to /url in JSON format. Will convert clj to js datastructures.
-  Will obtain and use a CSRF token."
-  [url data]
+  Will obtain and use a CSRF token. Use `options` to override the options passed to `js/fetch`.
+  The options will be shallow-merged into the defaults."
+  [url data & [options]]
   (->
     (fetch-csrf-token)
     (.then (fn [csrf-token]
-             (js/fetch url
-                       (clj->js {:method "POST"
-                                 :headers {:content-type "application/json"
-                                           :X-XSRF-TOKEN csrf-token}
-                                 :body (js/JSON.stringify (clj->js data))}))))
+             (js/fetch
+               url
+               (clj->js
+                 (merge
+                   {:method "POST"
+                    :headers {:content-type "application/json"
+                              :X-XSRF-TOKEN csrf-token}
+                    :credentials "include"
+                    :body (js/JSON.stringify (clj->js data))}
+                   (js->clj options :keywordize-keys true))))))
     (.then (fn [res] (.json res)))))
