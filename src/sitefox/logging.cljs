@@ -24,7 +24,7 @@
   Rebinds `console.log` and `console.error` so that they write to `./logs/error.log` as well as stdout."
   []
   (when (not (aget js/console "_logstream"))
-    (let [logs (str js/__dirname "/logs")
+    (let [logs (str (or js/__dirname ".") "/logs")
           error-log (.createStream rfs "error.log" (clj->js {:interval "7d" :path logs :teeToStdout true}))
           log-fn (fn [& args]
                    (let [date (.toISOString (js/Date.))
