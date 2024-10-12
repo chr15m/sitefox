@@ -57,7 +57,8 @@
   [email-address & [build-id]]
   (let [sitefox-traceback-singleton (aget js/process "sitefox-traceback-handler")]
     (if (nil? sitefox-traceback-singleton)
-      (let [log (.createStream rfs "error.log" (clj->js {:interval "7d" :path (str js/__dirname "/logs") :teeToStdout true}))
+      (let [log-dir (str (or js/__dirname ".") "/logs") ; (:file (meta #'f)) <- nbb
+            log (.createStream rfs "error.log" (clj->js {:interval "7d" :path log-dir :teeToStdout true}))
             error-handler-fn (partial handle-traceback email-address log build-id)
             error-fn (fn [error]
                        (p/do!
