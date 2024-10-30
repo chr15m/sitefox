@@ -122,4 +122,4 @@
                     :credentials "include"
                     :body (js/JSON.stringify (clj->js data))}
                    (js->clj options :keywordize-keys true))))))
-    (.then (fn [res] (.json res)))))
+    (.then (fn [res] (when (aget res "ok") (.json res))))))
