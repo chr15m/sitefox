@@ -57,7 +57,7 @@
 <h3><a href="#manually-installing-sitefox" id="manually-installing-sitefox"></a>Manually installing Sitefox</h3>
 <p>Add Sitefox to your project as a dependency:</p>
 <pre><code>{:deps
- {io.github.chr15m/sitefox {:git/tag "v0.0.25" :git/sha "730b6e4dc121622c0f63f965cace55537ff956a3"}}}
+ {io.github.chr15m/sitefox {:git/tag "v0.0.26" :git/sha "e6ea2027b5d4277917732d43d550083c8e105da9"}}}
 </code></pre>
 <p>If you’re using <code>npm</code> you can install sitefox as a dependency that way. If you do that you will need to add <code>node_modules/sitefox/src</code> to your classpath somehow.</p>
 <pre><code>npm i sitefox
@@ -283,7 +283,7 @@ DATABASE_URL=postgres:///somedatabase
                                           :X-XSRF-TOKEN token} ; &lt;- use token here
                             :body (js/JSON.stringify (clj-&gt;js some-data))}))))
 </code></pre>
-<p><strong>Note</strong>: you can fetch the CSRF token from a client side cookie instead if you set the environment variable <code>SEND-CSRF-TOKEN</code>. This was the default in previous Sitefox versions. When set, Sitefox will send the token on every GET request in the client side cookie <code>XSRF-TOKEN</code> and this can be retrieved with the <code>ui/csrf-token</code> function. This is a valid, but less secure form of CSRF protection.</p>
+<p><strong>Note</strong>: you can fetch the CSRF token from a client side cookie instead if you set the environment variable <code>SEND_CSRF_TOKEN</code>. This was the default in previous Sitefox versions. When set, Sitefox will send the token on every GET request in the client side cookie <code>XSRF-TOKEN</code> and this can be retrieved with the <code>ui/csrf-token</code> function. This is a valid, but less secure form of CSRF protection.</p>
 <p>In some rare circumstances you may wish to turn off CSRF checks (for example posting to an API from a non-browser device). If you know what you are doing you can use the <code>pre-csrf-router</code> to add routes which bypass the CSRF checking:</p>
 <pre><code class="language-clojure">(defn setup-routes [app]
   ; flush all routes from express

@@ -8,7 +8,7 @@
                              :XSRF-Token (csrf-token)}
                              :body (js/JSON.stringify (clj-&gt;js data))})
 </code></pre>
-<p><strong>Note</strong>: passing the token via client side cookie is now deprecated. If you want to re-enable it set the client side environment variable <code>SEND-CSRF-COOKIE</code>, and then this function will work again.</p>
+<p><strong>Note</strong>: passing the token via client side cookie is now deprecated. If you want to re-enable it set the client side environment variable <code>SEND_CSRF_COOKIE</code>, and then this function will work again.</p>
 <p>See the README for more details: <a href="https://github.com/chr15m/sitefox/#csrf-protection">https://github.com/chr15m/sitefox/#csrf-protection</a></p>
 </div></div><div class="src-link"><a href="https://github.com/chr15m/sitefox/blob/master/src/sitefox/ui.cljs#L67">view source</a></div></div><div class="public anchor" id="var-fetch-csrf-token"><h3>fetch-csrf-token</h3><div class="usage"><code>(fetch-csrf-token)</code></div><div class="doc"><div class="markdown"><p>Returns a promise which resolves to a string containing the CSRF token fetched from the Sitefox backend server. Pass this value as the X-XSRF-TOKEN when doing POST requests via ajax fetch:</p>
 <pre><code class="language-clojure">  (-&gt; (fetch-csrf-token)
