@@ -441,7 +441,7 @@ and add it to the headers of a fetch request as follows:
                             :body (js/JSON.stringify (clj->js some-data))}))))
 ```
 
-**Note**: you can fetch the CSRF token from a client side cookie instead if you set the environment variable `SEND-CSRF-TOKEN`.
+**Note**: you can fetch the CSRF token from a client side cookie instead if you set the environment variable `SEND_CSRF_TOKEN`.
 This was the default in previous Sitefox versions.
 When set, Sitefox will send the token on every GET request in the client side cookie
 `XSRF-TOKEN` and this can be retrieved with the `ui/csrf-token` function.

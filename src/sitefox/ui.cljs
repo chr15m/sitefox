@@ -77,7 +77,7 @@
    ```
 
    **Note**: passing the token via client side cookie is now deprecated.
-   If you want to re-enable it set the client side environment variable `SEND-CSRF-COOKIE`,
+   If you want to re-enable it set the client side environment variable `SEND_CSRF_COOKIE`,
    and then this function will work again.
 
    See the README for more details: <https://github.com/chr15m/sitefox/#csrf-protection>

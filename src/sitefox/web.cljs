@@ -98,7 +98,7 @@
   (.get app "/_csrf-token"
         (fn [req res]
           (.json res (j/call req :csrfToken true false))))
-  (when (env "SEND-CSRF-COOKIE")
+  (when (env "SEND_CSRF_COOKIE")
     (.get app (fn [req res done]
                 (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken true false)
                         #js {:secure true :sameSite "Strict"})
