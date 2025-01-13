@@ -44,6 +44,35 @@
   [req]
   (= (aget req "method") "POST"))
 
+(defn setup-csrf-middleware
+  [app]
+  (let [pre-csrf-router (Router.)]
+    (.use app pre-csrf-router)
+    (j/assoc! app :pre-csrf-router pre-csrf-router))
+  (.use app (j/get (csrf #js {:getSecret (fn [] (env "SECRET" "DEVMODE"))
+                              :cookieOptions #js {:httpOnly true :sameSite "Strict" :secure true}
+                              :size 32
+                              :cookieName "XSRF-TOKEN"
+                              :getTokenFromRequest (fn [req]
+                                                     (or (j/get-in req [:body :_csrf])
+                                                         (j/call req :get "xsrf-token")
+                                                         (j/call req :get "x-xsrf-token")))})
+                   :doubleCsrfProtection))
+  (.get app "/_csrf-token"
+        (fn [req res]
+          (.json res (j/call req :csrfToken true false))))
+  (when (env "SEND_CSRF_COOKIE")
+    (.use app
+          (fn [req res done]
+            (let [extension (.toLowerCase (path/extname (j/get req :path)))]
+              (when (or (= extension "")
+                        (= extension ".html"))
+                (let [token (j/call req :csrfToken true false)]
+                  (j/call res :cookie "XSRF-Token" token
+                          #js {:sameSite "Strict" :secure true}))))
+            (done))))
+  app)
+
 (defn add-default-middleware
   "Set up default express middleware for:
 
@@ -83,26 +112,7 @@
   (.use app (.json body-parser #js {:limit "10mb" :extended true :parameterLimit 1000}))
   (.use app (.urlencoded body-parser #js {:extended true}))
   (.use app (.text body-parser))
-  (let [pre-csrf-router (Router.)]
-    (.use app pre-csrf-router)
-    (j/assoc! app :pre-csrf-router pre-csrf-router))
-  (.use app (j/get (csrf #js {:getSecret (fn [] (env "SECRET" "DEVMODE"))
-                              :cookieOptions #js {:httpOnly true :sameSite "Strict" :secure true}
-                              :size 32
-                              :cookieName "XSRF-TOKEN"
-                              :getTokenFromRequest (fn [req]
-                                                     (or (j/get-in req [:body :_csrf])
-                                                         (j/call req :get "xsrf-token")
-                                                         (j/call req :get "x-xsrf-token")))})
-                   :doubleCsrfProtection))
-  (.get app "/_csrf-token"
-        (fn [req res]
-          (.json res (j/call req :csrfToken true false))))
-  (when (env "SEND_CSRF_COOKIE")
-    (.get app (fn [req res done]
-                (j/call res :cookie "XSRF-TOKEN" (j/call req :csrfToken true false)
-                        #js {:secure true :sameSite "Strict"})
-                (done))))
+  (setup-csrf-middleware app)
   app)
 
 (defn static-folder
