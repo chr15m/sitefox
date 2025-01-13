@@ -4,11 +4,13 @@ Web framework for ClojureScript on Node.
   <img src="docs/logo.svg?sanitize=true" alt="Sitefox logo"><br/>
 </p>
 
-In the tradition of Django, Flask, and Rails.
+In the tradition of Flask, and Sinatra.
 Designed for indie devs who ship fast.
 Battle tested on real sites.
 
 [Philosophy](#philosophy) | [Quick start](#quick-start) | [Documentation](https://chr15m.github.io/sitefox/) | [API](#api) | [Examples](https://github.com/chr15m/sitefox/tree/main/examples) | [Community](#community)
+
+[Getting started YouTube video](https://www.youtube.com/watch?v=zjLaLXfgY34).
 
 ```clojure
 (ns webserver
