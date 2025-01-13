@@ -72,7 +72,7 @@
    (js/fetch \"/api/endpoint\"
              #js {:method \"POST\"
                   :headers #js {:Content-Type \"application/json\"
-                                :XSRF-Token (csrf-token)}
+                                :XSRF-TOKEN (csrf-token)}
                                 :body (js/JSON.stringify (clj->js data))})
    ```
 
