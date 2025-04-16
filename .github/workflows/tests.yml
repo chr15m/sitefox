@@ -102,7 +102,18 @@ jobs:
           echo "-> CI failed failed to see server start within $TIMEOUT seconds."
           exit 1 # Exit with error if server fails to start
         fi
-        killall node java || true # Allow failure if processes not found
+        echo "Attempting to kill processes after successful test..."
+        pkill -f make || true
+        pkill -f java || true
+        pkill -f node || true
+        sleep 2 # Give processes time to terminate gracefully
+        # Verify port is free
+        if lsof -i :$PORT; then
+          echo "ERROR: Port $PORT still in use after kill attempts!"
+          exit 1
+        else
+          echo "Port $PORT is free after kill attempts."
+        fi
 
     - name: Test npm create sitefox-nbb
       working-directory: ./test-create-scripts
@@ -112,6 +123,8 @@ jobs:
         npm create sitefox-nbb test-nbb-app --prefix ../
         cd test-nbb-app
         npm install
+        echo "Checking port $PORT before starting nbb server..."
+        lsof -i :$PORT || echo "Port $PORT is free before nbb serve"
         npm run serve &
         if timeout $TIMEOUT bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
           echo "-> CI saw server start successfully."
@@ -119,4 +132,5 @@ jobs:
           echo "-> CI failed failed to see server start within $TIMEOUT seconds."
           exit 1 # Exit with error if server fails to start
         fi
-        killall node || true # Allow failure if process not found
+        pkill -f node || true
+        sleep 2 # Give processes time to terminate gracefully
