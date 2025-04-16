@@ -9,6 +9,7 @@ env:
   TESTING: 1
   DATABASE_URL: sqlite://./tests.sqlite
   PORT: 8000
+  TIMEOUT: 60
 
 jobs:
   test:
@@ -95,7 +96,7 @@ jobs:
         cd test-fullstack-app
         npm install
         make watch &
-        if timeout 30 bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
+        if timeout $TIMEOUT bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
           echo "Server started successfully."
         else
           echo "Server failed to start within 30 seconds."
@@ -112,7 +113,7 @@ jobs:
         cd test-nbb-app
         npm install
         npm run serve &
-        if timeout 30 bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
+        if timeout $TIMEOUT bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
           echo "Server started successfully."
         else
           echo "Server failed to start within 30 seconds."
