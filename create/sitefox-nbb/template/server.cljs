@@ -1,4 +1,4 @@
-(ns webserver
+(ns server
   (:require
     ["fs" :as fs]
     [promesa.core :as p]
@@ -9,10 +9,10 @@
     [sitefox.util :refer [env]]
     [sitefox.html :refer [render-into]]
     [sitefox.reloader :refer [nbb-reloader]]
-    [sitefox.tracebacks :refer [install-traceback-emailer]]))
+    [sitefox.tracebacks :refer [install-traceback-handler]]))
 
 (when-let [admin-email (env "ADMIN_EMAIL")]
-  (install-traceback-emailer admin-email))
+  (install-traceback-handler admin-email))
 
 (def template (fs/readFileSync "public/index.html"))
 
