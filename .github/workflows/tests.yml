@@ -96,10 +96,20 @@ jobs:
         cd test-fullstack-app
         npm install
         make watch &
-        if timeout $TIMEOUT bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
+        bgpid=$!
+        echo "Server PID: $bgpid"
+        # Use double quotes for bash -c to allow $bgpid expansion
+        if timeout $TIMEOUT bash -c \
+          "until echo > /dev/tcp/localhost/$PORT; do \
+             echo -n '.'; \
+             # Check if background process is still running
+             kill -0 $bgpid 2>/dev/null || { echo 'Server died.'; exit 1; }; \
+             sleep 1; \
+           done 2>/dev/null"; then
           echo "-> CI saw server start successfully."
         else
-          echo "-> CI failed failed to see server start within $TIMEOUT seconds."
+          # Failure message updated slightly to reflect the new check
+          echo "-> CI failed to see server."
           exit 1 # Exit with error if server fails to start
         fi
         echo "Attempting to kill processes after successful test..."
@@ -126,10 +136,20 @@ jobs:
         echo "Checking port $PORT before starting nbb server..."
         lsof -i :$PORT || echo "Port $PORT is free before nbb serve"
         npm run serve &
-        if timeout $TIMEOUT bash -c 'until echo > /dev/tcp/localhost/$PORT; do echo -n "."; sleep 1; done 2>/dev/null'; then
+        bgpid=$!
+        echo "Server PID: $bgpid"
+        # Use double quotes for bash -c to allow $bgpid expansion
+        if timeout $TIMEOUT bash -c \
+          "until echo > /dev/tcp/localhost/$PORT; do \
+             echo -n '.'; \
+             # Check if background process is still running
+             kill -0 $bgpid 2>/dev/null || { echo 'Server died.'; exit 1; }; \
+             sleep 1; \
+           done 2>/dev/null"; then
           echo "-> CI saw server start successfully."
         else
-          echo "-> CI failed failed to see server start within $TIMEOUT seconds."
+          # Failure message updated slightly to reflect the new check
+          echo "-> CI failed failed to see server."
           exit 1 # Exit with error if server fails to start
         fi
         pkill -f node || true
