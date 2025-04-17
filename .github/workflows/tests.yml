@@ -87,6 +87,9 @@ jobs:
     - name: Create temporary directory for create tests
       run: mkdir test-create-scripts
 
+    - name: Link fullstack create package for create tests
+      run: cd create/sitefox-fullstack && npm link
+
     - name: Test npm create sitefox-fullstack
       working-directory: ./test-create-scripts
       run: |
@@ -124,6 +127,9 @@ jobs:
         else
           echo "Port $PORT is free after kill attempts."
         fi
+
+    - name: Link nbb create package for create tests
+      run: cd create/sitefox-nbb && npm link
 
     - name: Test npm create sitefox-nbb
       working-directory: ./test-create-scripts
